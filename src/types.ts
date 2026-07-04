@@ -101,3 +101,63 @@ export interface EmailLog {
   triggerType: "auto_scan" | "manual_reminder" | "test_send";
 }
 
+export interface CountryEmergencyProfile {
+  name: string;
+  flag: string;
+  primaryNumber: string;
+  ambulance: string;
+  police: string;
+  fire: string;
+  gendarmerie?: string;
+  desc: string;
+}
+
+export const COUNTRY_PROFILES: { [key: string]: CountryEmergencyProfile } = {
+  Cameroon: {
+    name: "Cameroon",
+    flag: "🇨🇲",
+    primaryNumber: "112",
+    ambulance: "119 (SAMU)",
+    police: "117",
+    gendarmerie: "113",
+    fire: "118 (Sapeurs-Pompiers)",
+    desc: "In Cameroon, emergency services are highly decentralized. Dial 112 from any mobile phone for general routing. For clinical emergencies, call 119 (SAMU) or 118 for Sapeurs-Pompiers."
+  },
+  Nigeria: {
+    name: "Nigeria",
+    flag: "🇳🇬",
+    primaryNumber: "112",
+    ambulance: "112 / 199",
+    police: "112 / 199",
+    fire: "112 / 199",
+    desc: "Nigeria operates a unified National Emergency number 112. Both 112 and 199 route to local emergency dispatch agencies."
+  },
+  Kenya: {
+    name: "Kenya",
+    flag: "🇰🇪",
+    primaryNumber: "112",
+    ambulance: "999 / 112 / 911",
+    police: "999 / 112",
+    fire: "999",
+    desc: "Kenya's official emergency toll-free service is 999. Major mobile service providers also support 112 and 911."
+  },
+  Senegal: {
+    name: "Senegal",
+    flag: "🇸🇳",
+    primaryNumber: "112",
+    ambulance: "15 (SAMU)",
+    police: "17 (Police)",
+    fire: "18 (Sapeurs-Pompiers)",
+    desc: "Senegal uses 17 for Police, 18 for Fire/Accidents, and 15 for SAMU medical triage. 112 is supported as a general mobile emergency line."
+  },
+  "South Africa": {
+    name: "South Africa",
+    flag: "🇿🇦",
+    primaryNumber: "112",
+    ambulance: "10177 (Ambulance)",
+    police: "10111 (SAPS)",
+    fire: "10177",
+    desc: "South Africa routes cell phone emergency calls to 112. Landline users dial 10111 for police and 10177 for medical emergency."
+  }
+};
+

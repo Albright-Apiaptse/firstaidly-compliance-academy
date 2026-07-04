@@ -1,6 +1,6 @@
 {
-  "name": "FirstAid.ly Compliance Academy",
-  "description": "Premium interactive first-aid audit training & simulation tracker, complete with compliance badges, verifiable certifications, and custom video uploads.",
+  "name": "First Aidly.compliance.training",
+  "description": "Professional first-aid training, interactive clinical emergency index simulators, regional AED mapping, and OSHA-compliant corporate audits.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

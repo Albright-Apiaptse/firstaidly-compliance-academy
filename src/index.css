@@ -1,1 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* Base custom font family & styling */
+body {
+  background-color: #FAFAF9 !important;
+  color: #0B0B0C !important;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom minimal scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #FAFAF9;
+}
+::-webkit-scrollbar-thumb {
+  background: #E5E5EA;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #D7263D;
+}
+
+/* Hard edges theme transitions */
+.vital-deck-transition {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vital-hero-heading {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  letter-spacing: -0.02em;
+  font-weight: 300;
+  line-height: 1.05;
+}
+
+.vital-micro-label {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  letter-spacing: 0.12em;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Sharp industrial borders */
+.vital-border-sharp {
+  border-radius: 0px !important;
+}
+
+/* Input custom theme styling */
+input, select, textarea {
+  color: #0B0B0C !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #E5E5EA !important;
+  border-radius: 0px !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #D7263D !important;
+  outline: none !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #8E8E93 !important;
+}

@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { ChevronLeft, Play, ShieldAlert, Award, AlertCircle, RefreshCw, Send, CheckCircle, XCircle, Upload, Film, FileVideo } from "lucide-react";
-import { Course } from "../types";
+import { Course, COUNTRY_PROFILES } from "../types";
 
 interface SimulationRunnerProps {
   course: Course;
   studentId: string;
   onCompleteSimulation: (passed: boolean, score: number, feedback: string, videoUrl?: string) => void;
   onBackToQuiz: () => void;
+  countryContext: string;
 }
 
 const COMMON_ACTIONS = [
@@ -27,7 +28,7 @@ const COMMON_ACTIONS = [
   "Attempt to pull the lodged choking object out of their throat with tweezers"
 ];
 
-export default function SimulationRunner({ course, studentId, onCompleteSimulation, onBackToQuiz }: SimulationRunnerProps) {
+export default function SimulationRunner({ course, studentId, onCompleteSimulation, onBackToQuiz, countryContext }: SimulationRunnerProps) {
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [evaluation, setEvaluation] = useState<{
@@ -45,6 +46,15 @@ export default function SimulationRunner({ course, studentId, onCompleteSimulati
   const [dragActive, setDragActive] = useState(false);
 
   const scenario = course.simulationScenario;
+  const profile = COUNTRY_PROFILES[countryContext] || COUNTRY_PROFILES.Cameroon;
+
+  // Adapt the hardcoded 911 call action into the specific local African emergency context
+  const localizedCommonActions = COMMON_ACTIONS.map(action => {
+    if (action.includes("Call 911")) {
+      return `Call Local Emergency Dispatch (${profile.primaryNumber} or ${profile.ambulance.split(" ")[0]} in ${profile.name}) immediately and request bystanders search for an AED`;
+    }
+    return action;
+  });
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -112,7 +122,8 @@ export default function SimulationRunner({ course, studentId, onCompleteSimulati
           scenarioTitle: scenario.title,
           scenarioDescription: scenario.description,
           actionsTaken: selectedActions,
-          criticalSteps: scenario.criticalSteps
+          criticalSteps: scenario.criticalSteps,
+          countryContext
         })
       });
 
@@ -121,14 +132,19 @@ export default function SimulationRunner({ course, studentId, onCompleteSimulati
       setEvaluation(result);
     } catch (e) {
       console.error(e);
-      // Fallback evaluation logic
+      // Fallback evaluation logic in the local country context
       const score = Math.min(100, selectedActions.length * 20);
+      const isCameroon = profile.name === "Cameroon";
       setEvaluation({
         score,
         passed: score >= 75,
-        feedback: "Completed emergency protocol. Review compression rhythms or abdominal wrap placement to achieve perfect marks.",
-        criticalMissingSteps: ["Ensure 911 dispatch was immediate."],
-        clinicalRationale: "In emergency states, swift triage and notification ensures medical personnel arrive early."
+        feedback: `Completed emergency protocol in ${profile.name}. Review compression rhythms, physical posture, and local dispatcher communication.`,
+        criticalMissingSteps: [
+          isCameroon
+            ? "Ensure local emergency services (112 mobile or 119 SAMU) were reached immediately."
+            : `Ensure local emergency services (${profile.primaryNumber}) were reached immediately.`
+        ],
+        clinicalRationale: `In ${profile.name}, swift local dispatch notification ensures medical personnel or local responders arrive as quickly as possible.`
       });
     } finally {
       setIsSubmitting(false);
@@ -215,16 +231,17 @@ export default function SimulationRunner({ course, studentId, onCompleteSimulati
               )}
             </div>
 
-            {/* Optional Video Upload Section */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+             {/* Mandatory Video Simulation Upload Section */}
+            <div className="bg-white border-2 border-rose-200 rounded-2xl p-4 shadow-sm space-y-3 ring-4 ring-rose-50/50">
               <div className="flex items-center gap-2 text-rose-600">
-                <Film className="w-4 h-4 text-rose-600" />
-                <h3 className="text-xs font-bold uppercase tracking-widest text-rose-600">
-                  Optional: Video Simulation Upload
+                <Film className="w-4 h-4 text-rose-600 animate-pulse" />
+                <h3 className="text-xs font-black uppercase tracking-widest text-rose-600 flex items-center gap-1.5">
+                  Mandatory: Video Simulation Upload
+                  <span className="text-[8px] bg-rose-600 text-white font-extrabold px-1.5 py-0.5 rounded-md uppercase">REQUIRED</span>
                 </h3>
               </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                Record yourself demonstrating this practical skill and upload it. Instructors will inspect and verify your physical compression, posture, or bandage wraps.
+              <p className="text-[11px] text-slate-650 leading-relaxed font-medium">
+                Record yourself demonstrating this practical skill and upload it. <strong className="text-rose-600 font-bold">A practical demonstration is strictly mandatory for certification</strong> in the {profile.name} context. Instructors will verify your hand positioning, depth, and cadence.
               </p>
 
               {videoUrl ? (
@@ -236,8 +253,8 @@ export default function SimulationRunner({ course, studentId, onCompleteSimulati
                       className="w-full h-full object-cover"
                       playsInline
                     />
-                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-bold font-mono">
-                      UPLOADED SUCCESS
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-bold font-mono shadow-sm">
+                      PRACTICAL VIDEO ATTACHED
                     </div>
                   </div>
                   <div className="flex justify-between items-center bg-slate-50 border border-slate-150 rounded-lg p-2.5">
@@ -254,44 +271,64 @@ export default function SimulationRunner({ course, studentId, onCompleteSimulati
                   </div>
                 </div>
               ) : (
-                <div
-                  onDragEnter={handleDrag}
-                  onDragOver={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDrop={handleDrop}
-                  className={`border-2 border-dashed rounded-xl p-6 text-center transition cursor-pointer flex flex-col items-center justify-center space-y-2 ${
-                    dragActive
-                      ? "border-rose-500 bg-rose-50/25"
-                      : "border-slate-250 hover:border-rose-300 hover:bg-slate-50/50"
-                  }`}
-                  onClick={() => document.getElementById("video-file-input")?.click()}
-                >
-                  <input
-                    id="video-file-input"
-                    type="file"
-                    accept="video/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  
-                  {isUploadingVideo ? (
-                    <div className="flex flex-col items-center space-y-1.5">
-                      <RefreshCw className="w-6 h-6 text-rose-600 animate-spin" />
-                      <span className="text-[11px] font-semibold text-slate-700">Uploading and processing video...</span>
-                      <div className="w-24 h-1 bg-slate-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-rose-600 animate-pulse" style={{ width: "70%" }}></div>
+                <div className="space-y-3.5">
+                  <div
+                    onDragEnter={handleDrag}
+                    onDragOver={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDrop={handleDrop}
+                    className={`border-2 border-dashed rounded-xl p-5 text-center transition cursor-pointer flex flex-col items-center justify-center space-y-2 ${
+                      dragActive
+                        ? "border-rose-500 bg-rose-50/25"
+                        : "border-slate-250 hover:border-rose-300 hover:bg-slate-50/50"
+                    }`}
+                    onClick={() => document.getElementById("video-file-input")?.click()}
+                  >
+                    <input
+                      id="video-file-input"
+                      type="file"
+                      accept="video/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    
+                    {isUploadingVideo ? (
+                      <div className="flex flex-col items-center space-y-1.5">
+                        <RefreshCw className="w-6 h-6 text-rose-600 animate-spin" />
+                        <span className="text-[11px] font-semibold text-slate-700">Uploading and processing video...</span>
+                        <div className="w-24 h-1 bg-slate-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-rose-600 animate-pulse" style={{ width: "70%" }}></div>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="w-6 h-6 text-slate-400" />
-                      <p className="text-[11px] text-slate-600 font-medium">
-                        Drag & drop your recording, or <span className="text-rose-600 font-bold hover:underline">browse files</span>
-                      </p>
-                      <p className="text-[9px] text-slate-400">
-                        Supports MP4, MOV, or WEBM up to 50MB
-                      </p>
-                    </>
+                    ) : (
+                      <>
+                        <Upload className="w-6 h-6 text-slate-400" />
+                        <p className="text-[11px] text-slate-600 font-medium">
+                          Drag & drop your recording, or <span className="text-rose-600 font-bold hover:underline">browse files</span>
+                        </p>
+                        <p className="text-[9px] text-slate-400">
+                          Supports MP4, MOV, or WEBM up to 50MB
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  {!isUploadingVideo && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsUploadingVideo(true);
+                        setVideoName(`simulation_practical_${profile.name.toLowerCase()}_cpr.mp4`);
+                        setTimeout(() => {
+                          setVideoUrl("https://assets.mixkit.co/videos/preview/mixkit-nurse-putting-a-band-aid-on-a-patient-40543-large.mp4");
+                          setIsUploadingVideo(false);
+                        }, 1100);
+                      }}
+                      className="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-[10px] rounded-xl border border-rose-200 transition duration-150 flex items-center justify-center gap-1.5"
+                    >
+                      📹 Simulate Compliance Video Recording
+                    </button>
                   )}
                 </div>
               )}
@@ -301,7 +338,7 @@ export default function SimulationRunner({ course, studentId, onCompleteSimulati
             <div>
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  Select Action Field Guide
+                  Select Action Field Guide ({profile.name} Context)
                 </h3>
                 {selectedActions.length > 0 && (
                   <button
@@ -314,7 +351,7 @@ export default function SimulationRunner({ course, studentId, onCompleteSimulati
               </div>
 
               <div className="grid grid-cols-1 gap-1.5 max-h-[220px] overflow-y-auto border border-slate-200 bg-white p-2 rounded-xl shadow-sm">
-                {COMMON_ACTIONS.map((action, idx) => {
+                {localizedCommonActions.map((action, idx) => {
                   const isAdded = selectedActions.includes(action);
                   return (
                     <button
@@ -334,14 +371,25 @@ export default function SimulationRunner({ course, studentId, onCompleteSimulati
               </div>
             </div>
 
+            {/* Validation warning banner if video is missing */}
+            {!videoUrl && (
+              <div className="bg-rose-50 border border-rose-150 text-rose-900 text-[10px] p-3 rounded-xl flex items-start gap-2.5 font-medium shadow-sm">
+                <AlertCircle className="w-4.5 h-4.5 text-rose-600 shrink-0 mt-0.5" />
+                <div className="leading-snug">
+                  <span className="font-extrabold text-rose-700 uppercase block mb-0.5">Physical Verification Required</span>
+                  You must record and upload your hands-on demonstration video to unlock evaluation. Click "Simulate Compliance Video Recording" to attach a clinical mock for verification.
+                </div>
+              </div>
+            )}
+
             {/* Run Advisor Button */}
             <button
               onClick={handleSubmit}
-              disabled={selectedActions.length === 0 || isSubmitting}
+              disabled={selectedActions.length === 0 || !videoUrl || isSubmitting}
               className={`w-full py-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xl transition ${
-                selectedActions.length === 0 || isSubmitting
+                selectedActions.length === 0 || !videoUrl || isSubmitting
                   ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  : "bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/10"
+                  : "bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/10 cursor-pointer"
               }`}
             >
               {isSubmitting ? (

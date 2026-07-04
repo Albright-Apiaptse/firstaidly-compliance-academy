@@ -1459,7 +1459,7 @@ app.post("/api/students/submit-simulation", (req, res) => {
 
 // AI feedback on custom scenario actions using Gemini
 app.post("/api/simulations/ai-feedback", async (req, res) => {
-  const { scenarioTitle, scenarioDescription, actionsTaken, criticalSteps } = req.body;
+  const { scenarioTitle, scenarioDescription, actionsTaken, criticalSteps, countryContext = "Cameroon" } = req.body;
 
   if (!actionsTaken || !Array.isArray(actionsTaken) || actionsTaken.length === 0) {
     return res.status(400).json({ error: "Actions taken are required." });
@@ -1467,6 +1467,11 @@ app.post("/api/simulations/ai-feedback", async (req, res) => {
 
   try {
     const prompt = `You are an expert emergency first-aid clinical trainer. Evaluate a student's responses/actions in an emergency scenario simulation.
+This training is conducted in the context of: ${countryContext}.
+Please note that emergency responder contact names and numbers vary significantly across different regions, and specifically in this African country context, they are NOT "911".
+For instance, in Cameroon, the primary general mobile number is 112, medical SAMU is 119, and Sapeurs-Pompiers (fire) is 118.
+If a critical step is "Call 911" or "Call emergency dispatch", and the student chose to make a local emergency dispatch call for ${countryContext} (such as dial 112, 119, or local emergency services), you must treat this as a perfect match for that critical step. Do not count it as a missing step or penalize their score.
+
 Scenario: "${scenarioTitle}" - ${scenarioDescription}
 The student executed these steps in this exact order:
 ${actionsTaken.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}
@@ -1478,12 +1483,12 @@ Evaluate the response. You must generate a JSON response strictly complying with
 {
   "score": <integer from 0 to 100 representing quality, accuracy and correct sequencing of first aid>,
   "passed": <boolean, pass if score is >= 75 and no major safety violations occurred>,
-  "feedback": "<detailed general clinical review of their actions>",
-  "criticalMissingSteps": ["step description that they missed or failed to prioritize in order"],
-  "clinicalRationale": "<expert medical explanation for why order or specific omissions matter>"
+  "feedback": "<detailed general clinical review of their actions, customized for the ${countryContext} emergency infrastructure>",
+  "criticalMissingSteps": ["step description that they missed or failed to prioritize in order, taking into account that they called the correct local dispatch numbers instead of 911"],
+  "clinicalRationale": "<expert medical explanation for why order or specific omissions matter in ${countryContext}>"
 }
 
-Ensure the response contains ONLY the valid JSON, wrapped in nothing (or standard raw JSON format). Do not add any markdown blocks around it outside of json block if needed, but returning clean json is preferred.`;
+Ensure the response contains ONLY the valid JSON, wrapped in nothing.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",

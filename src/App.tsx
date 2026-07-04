@@ -52,7 +52,7 @@ const BADGE_MAP: Record<string, { label: string; icon: string; bg: string; text:
 
 const WELCOME_IMAGES = [
   {
-    src: "/src/assets/images/first_aid_hero_1782843292024.jpg",
+    src: "/src/assets/images/first_aid_hero_1782836300067.jpg",
     title: "First-Responder Toolkit",
     desc: "Workplace emergency & safety compliance training"
   },
@@ -86,6 +86,116 @@ export default function App() {
   const [signupProfilePic, setSignupProfilePic] = useState("https://api.dicebear.com/7.x/adventurer/svg?seed=Emma");
   const [activeWelcomeImgIndex, setActiveWelcomeImgIndex] = useState(0);
 
+  // Interactive States for Vital Response High-Fidelity Landing Page
+  const [landingSlide, setLandingSlide] = useState(0);
+  const [emergencySearch, setEmergencySearch] = useState("");
+  const [expandedReference, setExpandedReference] = useState<string | null>(null);
+  const [aedQuery, setAedQuery] = useState("");
+  const [isSearchingAed, setIsSearchingAed] = useState(false);
+  const [aedResults, setAedResults] = useState<any[]>([]);
+
+  // Tesla-style industrial interaction states
+  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
+  const [liveCounter, setLiveCounter] = useState(148290);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const { innerWidth, innerHeight } = window;
+      const x = (e.clientX / innerWidth) - 0.5;
+      const y = (e.clientY / innerHeight) - 0.5;
+      setMouseOffset({ x, y });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+
+    const interval = setInterval(() => {
+      setLiveCounter((prev) => prev + Math.floor(Math.random() * 3) + 1);
+    }, 4000);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Localized AED database search
+  const handleAedSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!aedQuery.trim()) return;
+    setIsSearchingAed(true);
+    setTimeout(() => {
+      const query = aedQuery.toLowerCase();
+      if (query.includes("yaounde") || query.includes("cameroon") || query.includes("yau")) {
+        setAedResults([
+          { name: "Yaoundé Central Hospital Trauma Hub", location: "Hospital Road, Ward 4", dist: "0.8 km", status: "Operational", number: "+237 222-1243" },
+          { name: "Bastos Community First Response Station", location: "Rue de Bastos, Gate B", dist: "1.4 km", status: "Operational", number: "+237 222-9851" },
+          { name: "Mvan Intercity Transport Public AED Cabinet", location: "Mvan Express Terminal Lobby", dist: "2.9 km", status: "Operational", number: "Public Access" }
+        ]);
+      } else if (query.includes("francisco") || query.includes("sf") || query.includes("soma")) {
+        setAedResults([
+          { name: "SOMA Public Health Center & AED Station", location: "501 Folsom St, SF", dist: "0.2 mi", status: "Operational", number: "+1 (415) 555-0199" },
+          { name: "Financial District Emergency Compliance Locker", location: "100 Pine St, Floor 2", dist: "0.7 mi", status: "Operational", number: "+1 (415) 555-0245" }
+        ]);
+      } else {
+        setAedResults([
+          { name: "Universal First Responder AED Kit", location: "Mobile Unit / Patrol Dispatch", dist: "0.0 km", status: "Active Dispatch", number: "Call Emergency Dispatch" },
+          { name: `${aedQuery} Municipal Center Training Vault`, location: "Central Registry Office", dist: "1.2 km", status: "Standby", number: "Emergency Service Unit" }
+        ]);
+      }
+      setIsSearchingAed(false);
+    }, 450);
+  };
+
+  const EMERGENCY_PROTOCOLS = [
+    {
+      id: "cpr",
+      title: "CARDIAC ARREST (CPR)",
+      actionLabel: "Arrest Trauma",
+      spec: "30 chest compressions at 100-120 BPM followed immediately by 2 high-volume rescue breaths.",
+      instructions: [
+        "Position victim flat on hard surface. Confirm unconsciousness and agonal breathing.",
+        "Place heel of one hand in center of chest, other hand interlaced on top.",
+        "Compress strictly between 2 to 2.4 inches (5 to 6 cm) depth. Release fully after each stroke.",
+        "Continue cyclical CPR compression blocks until formal AED arrival or paramedic transition."
+      ]
+    },
+    {
+      id: "bleeding",
+      title: "SEVERE HEMORRHAGE TRAUMA",
+      actionLabel: "Arterial Wound",
+      spec: "Direct manual pressure block or high-tension arterial tourniquet deployment.",
+      instructions: [
+        "Apply direct steady bilateral manual pressure using sterile gauze directly inside bleeding void.",
+        "If hemorrhaging is arterial, position windlass tourniquet 2 to 3 inches above wound site.",
+        "Tighten tourniquet strictly until bleeding stops and distal arterial pulse is fully arrested.",
+        "Secure the windlass and mark the precise timestamp 'T' clearly on the casualty's forehead."
+      ]
+    },
+    {
+      id: "choking",
+      title: "AIRWAYS OBSTRUCTION (CHOKING)",
+      actionLabel: "Heimlich Manifold",
+      spec: "Alternating blocks of 5 interscapular back blows and 5 deep subdiaphragmatic abdominal thrusts.",
+      instructions: [
+        "Stand firmly behind the victim, wrapping your arms securely around the upper waistline.",
+        "Make a tight fist with one hand and place it slightly above the navel, well below the breastbone.",
+        "Grasp your fist with your other hand and press inward and upward with severe, sudden force.",
+        "Repeat cycles continuously. If victim loses consciousness, immediately transition to standard flat CPR."
+      ]
+    },
+    {
+      id: "burns",
+      title: "THERMAL & CHEMICAL CRITIC",
+      actionLabel: "Epidermal Lesion",
+      spec: "Continuous temperate water irrigation for 20 minutes minimum. Sterile cover.",
+      instructions: [
+        "Irrigate damaged skin tissue with clean, cool running water immediately to dissipate heat.",
+        "Do NOT apply ice, ice-water, butter, oils, or adhesive ointments to the raw open wound surface.",
+        "Remove constricting items such as rings or tight garments from affected extremities gently.",
+        "Cover the open lesion loosely with a sterile, dry, non-adherent burn dressing to protect nerve ends."
+      ]
+    }
+  ];
+
   // App Master Data & Progress States
   const [courses, setCourses] = useState<Course[]>([]);
   const [progress, setProgress] = useState<StudentProgress[]>([]);
@@ -99,6 +209,7 @@ export default function App() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [studentFlowStep, setStudentFlowStep] = useState<"catalog" | "lessons" | "quiz" | "simulation" | "certificate">("catalog");
   const [activeCertificate, setActiveCertificate] = useState<Certificate | null>(null);
+  const [countryContext, setCountryContext] = useState<string>("Cameroon");
 
   // Instructor/Admin Workspace Navigation
   const [workspaceTab, setWorkspaceTab] = useState<"compliance" | "courses" | "notifications">("compliance");
@@ -520,41 +631,46 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
-      {/* Universal Top Nav Header */}
-      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-30 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-tr from-rose-600 to-red-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-rose-600/20 transition-transform hover:rotate-12 duration-300">
-            <svg className="w-5.5 h-5.5 text-white stroke-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
+    <div className="min-h-screen bg-[#FAFAF9] text-[#0B0B0C] flex flex-col font-sans antialiased selection:bg-[#D7263D] selection:text-white">
+      {/* Universal Top Nav Header — Pure Industrial Minimalist */}
+      <header className="h-16 bg-[#FAFAF9] border-b border-[#0B0B0C]/10 flex items-center justify-between px-6 z-30 shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="w-8 h-8 bg-[#D7263D] flex items-center justify-center text-white font-mono font-black text-xs select-none">
+            FA
           </div>
           <div>
-            <h1 className="text-base font-black tracking-tight text-slate-900 leading-none flex items-center gap-1">FirstAid.ly<span className="text-[10px] font-black uppercase text-rose-600 bg-rose-50 border border-rose-100 px-1.5 py-0.5 rounded-md">Academy</span></h1>
-            <p className="text-[9px] text-slate-450 font-black uppercase tracking-widest mt-0.5">Emergency Compliance Audits</p>
+            <h1 className="text-sm font-black tracking-wider text-[#0B0B0C] uppercase flex items-center gap-2 font-display">
+              First Aidly.compliance.training
+              <span className="text-[8px] bg-[#0B0B0C] text-white font-mono font-bold px-1.5 py-0.5 tracking-normal">
+                ACADEMY
+              </span>
+            </h1>
+            <p className="text-[9px] text-[#8E8E93] uppercase tracking-widest font-mono font-semibold">
+              Emergency Compliance Portal
+            </p>
           </div>
         </div>
 
         {currentUser ? (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <div className="hidden sm:flex flex-col items-end">
-              <span className="text-xs font-bold text-slate-800">{currentUser.name}</span>
-              <span className="text-[9px] font-bold uppercase tracking-widest text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+              <span className="text-xs font-semibold text-[#0B0B0C]">{currentUser.name}</span>
+              <span className="text-[9px] font-mono uppercase tracking-widest text-[#D7263D] mt-0.5">
                 {currentUser.role}
               </span>
             </div>
             
             <button
               onClick={handleLogout}
-              className="p-2 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-slate-100 transition"
+              className="text-[10px] font-mono uppercase tracking-wider border border-[#0B0B0C]/10 px-3 py-1.5 hover:border-[#D7263D] hover:text-[#D7263D] transition text-[#0B0B0C]"
               title="Logout Account"
             >
-              <LogOut className="w-4.5 h-4.5" />
+              Sign out
             </button>
           </div>
         ) : (
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            Regulatory Compliance Portal
+          <div className="text-[9px] font-mono text-[#8E8E93] uppercase tracking-widest border border-[#0B0B0C]/10 px-3 py-1 bg-[#FAFAF9]">
+            Regulatory Compliance Hub
           </div>
         )}
       </header>
@@ -562,207 +678,513 @@ export default function App() {
       {/* Main Content Body */}
       <div className="flex-1 flex overflow-hidden">
         {!currentUser ? (
-          /* Staggering visual identity login & signup page */
-          <div className="flex-1 flex flex-col lg:flex-row h-full">
-            {/* Left side: Premium branding context */}
-            <div className="flex-1 bg-gradient-to-br from-slate-50 via-white to-rose-50/30 p-8 lg:p-16 flex flex-col justify-between overflow-y-auto">
-              <div className="space-y-6 max-w-lg">
-                <span className="inline-flex text-[10px] font-bold uppercase tracking-widest bg-rose-50 text-rose-600 border border-rose-200 px-2.5 py-1 rounded-full">
-                  Interactive Compliance Training
-                </span>
-                
-                <h1 className="text-4xl lg:text-5xl font-black text-slate-900 leading-none tracking-tight">
-                  Empowering Instant Lifesaving Confidence.
-                </h1>
-                
-                <p className="text-sm text-slate-650 leading-relaxed font-medium">
-                  FirstAid.ly combines bite-sized guidelines, video demonstrations, and a Gemini AI Emergency Simulator to train, track, and dynamically certify compliant first aid responders.
-                </p>
-
-                 {/* Newly Added First Aid Hero Image with Interactive Slideshow */}
-                <div className="space-y-3.5 my-4">
-                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-md aspect-video bg-slate-100 group">
-                    <img
-                      src={WELCOME_IMAGES[activeWelcomeImgIndex].src}
-                      alt={WELCOME_IMAGES[activeWelcomeImgIndex].title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/15 to-transparent flex flex-col justify-end p-4">
-                      <span className="text-[10px] font-black uppercase text-rose-400 tracking-wider">
-                        {WELCOME_IMAGES[activeWelcomeImgIndex].title}
-                      </span>
-                      <span className="text-xs font-semibold text-white mt-0.5 leading-tight">
-                        {WELCOME_IMAGES[activeWelcomeImgIndex].desc}
-                      </span>
-                    </div>
-
-                    {/* Slideshow Arrow Toggles */}
-                    <div className="absolute top-1/2 -translate-y-1/2 left-3 right-3 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          /* High-fidelity storytelling page deck with Slidebean Presentation Deck & Tesla aesthetic */
+          <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden">
+            
+            {/* LEFT SIDE: Slidebean-inspired Storytelling Presentation Canvas */}
+            <div className="flex-1 bg-[#FAFAF9] border-r border-[#0B0B0C]/10 flex flex-col h-full overflow-hidden relative">
+              
+              {/* Deck Presentation slide navigation menu bar */}
+              <div className="h-12 border-b border-[#0B0B0C]/10 px-6 flex items-center justify-between shrink-0 bg-[#FAFAF9]">
+                <div className="flex gap-4">
+                  {[0, 1, 2, 3, 4, 5].map((idx) => {
+                    const labelMap = ["Hero", "Stakes", "Process", "Reference", "AED Map", "Corporate"];
+                    const isActive = landingSlide === idx;
+                    return (
                       <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveWelcomeImgIndex((prev) => (prev === 0 ? WELCOME_IMAGES.length - 1 : prev - 1));
-                        }}
-                        className="w-8 h-8 rounded-full bg-slate-950/60 text-white flex items-center justify-center hover:bg-rose-600 pointer-events-auto transition active:scale-95 shadow border border-white/10"
+                        key={idx}
+                        onClick={() => setLandingSlide(idx)}
+                        className={`text-[9px] uppercase tracking-widest font-mono font-bold border-b-2 py-3 transition ${
+                          isActive
+                             ? "border-[#D7263D] text-[#0B0B0C]"
+                             : "border-transparent text-[#8E8E93] hover:text-[#0B0B0C]"
+                        }`}
                       >
-                        <svg className="w-4 h-4 stroke-current fill-none stroke-2" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                        </svg>
+                        {labelMap[idx]}
                       </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveWelcomeImgIndex((prev) => (prev === WELCOME_IMAGES.length - 1 ? 0 : prev + 1));
-                        }}
-                        className="w-8 h-8 rounded-full bg-slate-950/60 text-white flex items-center justify-center hover:bg-rose-600 pointer-events-auto transition active:scale-95 shadow border border-white/10"
-                      >
-                        <svg className="w-4 h-4 stroke-current fill-none stroke-2" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
+                    );
+                  })}
+                </div>
+                <div className="text-[9px] font-mono text-[#8E8E93]">
+                  Section 0{landingSlide + 1} / 06
+                </div>
+              </div>
 
-                  {/* Thumbnails list for easy navigation */}
-                  <div className="flex gap-2 items-center justify-start overflow-x-auto pb-1">
-                    {WELCOME_IMAGES.map((img, idx) => {
-                      const isActive = activeWelcomeImgIndex === idx;
-                      return (
+              {/* Dynamic Presentation Window */}
+              <div className="flex-1 overflow-y-auto p-8 lg:p-14 flex flex-col justify-between">
+                
+                {/* SLIDE CONTENT AREA */}
+                <div className="max-w-xl w-full my-auto space-y-8">
+                  {landingSlide === 0 && (
+                    <div className="space-y-6 animate-fadeIn">
+                      <span className="vital-micro-label text-[#8E8E93] block">
+                        FIRST AIDLY.COMPLIANCE.TRAINING — CERTIFIED FIRST AID TRAINING
+                      </span>
+                      <h1 className="vital-hero-heading text-5xl lg:text-7xl text-[#0B0B0C] tracking-tight font-light">
+                        Know what to do before it matters.
+                      </h1>
+                      <div className="w-12 h-[2px] bg-[#D7263D]"></div>
+                      
+                      <div className="text-xs text-[#0B0B0C] leading-relaxed max-w-md font-normal space-y-2">
+                        <p>
+                          First aid training requires absolute clarity and technical authority. We deploy clinical presentation decks paired with real-time diagnostic crisis simulations.
+                        </p>
+                        <div className="text-[10px] font-mono text-[#8E8E93] flex items-center gap-2 pt-2">
+                          <span className="w-2 h-2 rounded-full bg-[#D7263D] animate-ping"></span>
+                          <span>ACTIVE COMPLIANCE RECORDS: <strong className="text-[#0B0B0C]">{liveCounter.toLocaleString()}</strong></span>
+                        </div>
+                      </div>
+
+                      {/* Main Interactive Documentary Visual with Parallax Shift */}
+                      <div className="border border-[#0B0B0C]/10 relative group overflow-hidden bg-[#FAFAF9] aspect-video">
+                        <img
+                          src="/src/assets/images/first_aid_hero_1782836300067.jpg"
+                          alt="First Responder Clinical Operations"
+                          style={{
+                            transform: `translate(${mouseOffset.x * 12}px, ${mouseOffset.y * 12}px) scale(1.04)`,
+                            transition: "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)"
+                          }}
+                          className="w-full h-full object-cover filter contrast-105"
+                        />
+                        <div className="absolute bottom-3 left-3 bg-[#FAFAF9] border border-[#0B0B0C]/10 px-2.5 py-1">
+                          <span className="text-[8px] font-mono uppercase tracking-widest text-[#0B0B0C] font-semibold">
+                            CPR Manikin Training Module • Active Clinical Workspace
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {landingSlide === 1 && (
+                    <div className="space-y-6 animate-fadeIn">
+                      <span className="vital-micro-label text-[#D7263D] block">
+                        CLINICAL REALITY & SURVIVAL STATISTICS
+                      </span>
+                      <h2 className="text-4xl font-light text-[#0B0B0C] tracking-tight font-display">
+                        The stakes of response delay.
+                      </h2>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                        <div className="border-l border-[#0B0B0C] pl-4 space-y-1">
+                          <span className="text-6xl font-light font-display text-[#0B0B0C] leading-none block">08%</span>
+                          <p className="text-[10px] text-[#8E8E93] uppercase tracking-wider font-semibold">
+                            Average survival rate of out-of-hospital cardiac arrest without immediate bystander chest compressions.
+                          </p>
+                        </div>
+                        <div className="border-l border-[#D7263D] pl-4 space-y-1">
+                          <span className="text-6xl font-light font-display text-[#D7263D] leading-none block">3x</span>
+                          <p className="text-[10px] text-[#8E8E93] uppercase tracking-wider font-semibold">
+                            Increase in casualty survival likelihood when bystander CPR is initiated within the first 120 seconds.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <p className="text-xs text-[#0B0B0C] leading-relaxed max-w-md font-normal">
+                        Every minute of delay reduces survival outcomes by 10%. Professional-grade training ensures direct response under intense physical stress conditions.
+                      </p>
+
+                      <div className="border border-[#0B0B0C]/10 relative overflow-hidden bg-[#FAFAF9] h-48">
+                        <img
+                          src="/src/assets/images/first_aid_hero_1782843292024.jpg"
+                          alt="First-Aid Trauma Equipment"
+                          className="w-full h-full object-cover filter contrast-105"
+                        />
+                        <div className="absolute bottom-3 left-3 bg-[#FAFAF9] border border-[#0B0B0C]/10 px-2.5 py-1">
+                          <span className="text-[8px] font-mono uppercase tracking-widest text-[#0B0B0C] font-semibold">
+                            Equipment Spec: Direct Wound Care Supplies
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {landingSlide === 2 && (
+                    <div className="space-y-6 animate-fadeIn">
+                      <span className="vital-micro-label text-[#8E8E93] block">
+                        COMPLIANCE CERTIFICATION PROCESS
+                      </span>
+                      <h2 className="text-4xl font-light text-[#0B0B0C] tracking-tight font-display">
+                        Three steps to compliance.
+                      </h2>
+                      
+                      <div className="space-y-4 pt-2">
+                        {[
+                          { num: "01", title: "Study clinical curriculum outlines", desc: "Absorb high-resolution, interactive lessons built with certified critical care professionals." },
+                          { num: "02", title: "Complete theoretical evaluations", desc: "Pass Randomized Multiple-Choice block evaluations with a strict 70% grading threshold." },
+                          { num: "03", title: "Interact with AI emergency simulators", desc: "Execute step-by-step physical crisis responses in live-graded stress scenarios." }
+                        ].map((step, idx) => (
+                          <div key={idx} className="flex gap-4 border-b border-[#0B0B0C]/10 pb-3 last:border-0">
+                            <span className="text-lg font-mono text-[#D7263D] font-bold">{step.num}</span>
+                            <div>
+                              <h4 className="text-xs uppercase font-mono tracking-wider text-[#0B0B0C] font-bold">{step.title}</h4>
+                              <p className="text-[11px] text-[#8E8E93] mt-0.5 leading-relaxed font-normal">{step.desc}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="border border-[#0B0B0C]/10 relative overflow-hidden h-40">
+                        <img
+                          src="/src/assets/images/cpr_guide_1782843315552.jpg"
+                          alt="Emergency Clinical Instruction"
+                          className="w-full h-full object-cover filter contrast-105"
+                        />
+                        <div className="absolute bottom-3 left-3 bg-[#FAFAF9] border border-[#0B0B0C]/10 px-2.5 py-1">
+                          <span className="text-[8px] font-mono uppercase tracking-widest text-[#0B0B0C] font-semibold">
+                            Classroom Compliance: Group First Responder Drills
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {landingSlide === 3 && (
+                    <div className="space-y-4 animate-fadeIn">
+                      <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3">
+                        <div>
+                          <span className="vital-micro-label text-[#8E8E93] block">
+                            CRITICAL EMERGENCY REFERENCE INDEX
+                          </span>
+                          <h2 className="text-3xl font-light text-[#0B0B0C] tracking-tight font-display mt-1">
+                            Emergency index logs.
+                          </h2>
+                        </div>
+                        {/* Interactive Protocol Search Bar */}
+                        <input
+                          type="text"
+                          value={emergencySearch}
+                          onChange={(e) => setEmergencySearch(e.target.value)}
+                          placeholder="Filter medical index..."
+                          className="bg-white border border-[#0B0B0C]/10 px-3 py-1.5 text-xs w-full md:w-44 focus:outline-none focus:border-[#D7263D] text-[#0B0B0C]"
+                        />
+                      </div>
+
+                      <div className="border border-[#0B0B0C]/10 divide-y divide-[#0B0B0C]/10 bg-white">
+                        {EMERGENCY_PROTOCOLS.filter(p => p.title.toLowerCase().includes(emergencySearch.toLowerCase()) || p.spec.toLowerCase().includes(emergencySearch.toLowerCase()))
+                          .map((proto) => {
+                            const isExpanded = expandedReference === proto.id;
+                            return (
+                              <div key={proto.id} className="p-3.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedReference(isExpanded ? null : proto.id)}
+                                  className="w-full text-left flex justify-between items-center"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[8px] bg-[#0B0B0C] text-white font-mono px-1.5 py-0.5 uppercase tracking-wider">
+                                      {proto.actionLabel}
+                                    </span>
+                                    <span className="text-xs font-bold tracking-wide text-[#0B0B0C] uppercase font-mono">
+                                      {proto.title}
+                                    </span>
+                                  </div>
+                                  <span className="text-[9px] text-[#D7263D] font-mono font-bold">
+                                    {isExpanded ? "[ CLOSE SPEC ]" : "[ DETAILED SPEC ]"}
+                                  </span>
+                                </button>
+                                
+                                {isExpanded && (
+                                  <div className="mt-3 pt-3 border-t border-[#0B0B0C]/10 space-y-2 animate-slideIn">
+                                    <p className="text-[10.5px] text-[#0B0B0C] bg-[#FAFAF9] p-3 border-l-2 border-[#D7263D] font-mono">
+                                      {proto.spec}
+                                    </p>
+                                    <ul className="space-y-1.5 pl-4 list-decimal text-[11px] text-[#8E8E93] leading-relaxed">
+                                      {proto.instructions.map((inst, i) => (
+                                        <li key={i}>{inst}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+
+                  {landingSlide === 4 && (
+                    <div className="space-y-4 animate-fadeIn">
+                      <span className="vital-micro-label text-[#8E8E93] block">
+                        DYNAMIC DEPLOYMENT REGISTRY
+                      </span>
+                      <h2 className="text-4xl font-light text-[#0B0B0C] tracking-tight font-display">
+                        Find an AED station.
+                      </h2>
+                      <p className="text-[11px] text-[#8E8E93] leading-relaxed max-w-md">
+                        Enter territory keywords to query regional public access defibrillators (AED) or local regulatory compliance centers.
+                      </p>
+
+                      <form onSubmit={handleAedSearch} className="flex gap-1.5">
+                        <input
+                          type="text"
+                          value={aedQuery}
+                          onChange={(e) => setAedQuery(e.target.value)}
+                          placeholder="e.g. Yaoundé or San Francisco..."
+                          className="flex-1 bg-white border border-[#0B0B0C]/10 px-3.5 py-2 text-xs focus:outline-none focus:border-[#D7263D] text-[#0B0B0C]"
+                        />
                         <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setActiveWelcomeImgIndex(idx)}
-                          className={`relative w-12 h-8 rounded-lg overflow-hidden border-2 transition shrink-0 ${
-                            isActive
-                              ? "border-rose-600 scale-105 shadow-sm"
-                              : "border-slate-200/80 hover:border-slate-400"
-                          }`}
-                          title={img.title}
+                          type="submit"
+                          className="bg-[#0B0B0C] hover:bg-[#D7263D] text-white px-5 py-2 text-xs uppercase font-mono tracking-wider font-bold transition duration-150"
                         >
-                          <img
-                            src={img.src}
-                            alt=""
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
+                          {isSearchingAed ? "Querying..." : "Locate"}
                         </button>
-                      );
-                    })}
+                      </form>
+
+                      <div className="space-y-2 max-h-[180px] overflow-y-auto">
+                        {aedResults.length > 0 ? (
+                          aedResults.map((res, idx) => (
+                            <div key={idx} className="bg-white border border-[#0B0B0C]/10 p-3 flex justify-between items-center text-xs">
+                              <div className="space-y-0.5">
+                                <h4 className="font-mono text-[#0B0B0C] font-bold uppercase text-[10.5px]">{res.name}</h4>
+                                <p className="text-[10px] text-[#8E8E93]">{res.location} • <strong className="text-[#D7263D]">{res.dist}</strong></p>
+                              </div>
+                              <span className="text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-1.5 py-0.5 uppercase tracking-wide font-mono shrink-0">
+                                {res.status}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="border border-dashed border-[#0B0B0C]/10 p-6 text-center text-[10.5px] text-[#8E8E93]">
+                            Enter a region above to query localized compliance databases. Try "Yaoundé" or "San Francisco".
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {landingSlide === 5 && (
+                    <div className="space-y-6 animate-fadeIn">
+                      <span className="vital-micro-label text-[#D7263D] block">
+                        REGULATORY STANDARDS COMPLIANCE
+                      </span>
+                      <h2 className="text-4xl font-light text-[#0B0B0C] tracking-tight font-display">
+                        B2B & Enterprise.
+                      </h2>
+                      <p className="text-xs text-[#0B0B0C] leading-relaxed font-normal max-w-md">
+                        First Aidly.compliance.training fulfills first aid preparedness requirements in strict accordance with OSHA Standard 1910.151, MENT, and AHA/ILCOR emergency consensus reviews.
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                        <div className="bg-white p-3.5 border border-[#0B0B0C]/10 space-y-1">
+                          <span className="text-[10px] font-mono text-[#D7263D] font-bold block">OSHA COMPLIANT</span>
+                          <p className="text-[10px] text-[#8E8E93]">Satisfies workplace first-aid responder certification protocols.</p>
+                        </div>
+                        <div className="bg-white p-3.5 border border-[#0B0B0C]/10 space-y-1">
+                          <span className="text-[10px] font-mono text-[#0B0B0C] font-bold block">AUTOMATED ALERTS</span>
+                          <p className="text-[10px] text-[#8E8E93]">Integrates with HR software to alert before credentials expire.</p>
+                        </div>
+                      </div>
+
+                      <div className="border border-[#0B0B0C]/10 relative overflow-hidden h-40">
+                        <img
+                          src="/src/assets/images/tourniquet_guide_1782843341065.jpg"
+                          alt="First Responder Clinical Operations"
+                          className="w-full h-full object-cover filter contrast-105"
+                        />
+                        <div className="absolute bottom-3 left-3 bg-[#FAFAF9] border border-[#0B0B0C]/10 px-2.5 py-1">
+                          <span className="text-[8px] font-mono uppercase tracking-widest text-[#0B0B0C] font-semibold">
+                            Trauma Drill Spec: Tourniquet Compression Layout
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* BOTTOM BRAND FOOTER (Deck view selectors) */}
+                <div className="border-t border-[#0B0B0C]/10 pt-6 flex justify-between items-center shrink-0">
+                  <div className="flex gap-1">
+                    {[0, 1, 2, 3, 4, 5].map((idx) => (
+                      <span
+                        key={idx}
+                        className={`w-4 h-[2px] transition-all duration-200 ${
+                          landingSlide === idx ? "bg-[#D7263D] w-8" : "bg-[#0B0B0C]/10"
+                        }`}
+                      ></span>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      disabled={landingSlide === 0}
+                      onClick={() => setLandingSlide(prev => prev - 1)}
+                      className={`text-[10px] font-mono uppercase tracking-wider transition ${
+                        landingSlide === 0 ? "text-[#E5E5EA] cursor-not-allowed" : "text-[#0B0B0C] hover:text-[#D7263D]"
+                      }`}
+                    >
+                      [ PREV SLIDE ]
+                    </button>
+                    <button
+                      type="button"
+                      disabled={landingSlide === 5}
+                      onClick={() => setLandingSlide(prev => prev + 1)}
+                      className={`text-[10px] font-mono uppercase tracking-wider transition ${
+                        landingSlide === 5 ? "text-[#E5E5EA] cursor-not-allowed" : "text-[#0B0B0C] hover:text-[#D7263D]"
+                      }`}
+                    >
+                      [ NEXT SLIDE ]
+                    </button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                  <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
-                    <div>
-                      <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 mb-2.5">
-                        <Sparkles className="w-4 h-4" />
-                      </div>
-                      <h3 className="text-xs font-bold text-slate-850">AI-Driven Simulations</h3>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-1 leading-normal font-medium">
-                      Real-time interactive medical review from evaluators powered by Gemini.
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
-                    <div>
-                      <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-250 flex items-center justify-center text-emerald-600 mb-2.5">
-                        <Award className="w-4 h-4" />
-                      </div>
-                      <h3 className="text-xs font-bold text-slate-850">Automatic scan alerts</h3>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-1 leading-normal font-medium">
-                      Proactively scan and notify expiring compliance certifications automatically.
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
-                    <div>
-                      <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-250 flex items-center justify-center text-amber-600 mb-2.5">
-                        <Trophy className="w-4 h-4" />
-                      </div>
-                      <h3 className="text-xs font-bold text-slate-850">Academy Leaderboard</h3>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-1 leading-normal font-medium">
-                      Earn XP points, conquer challenges, and unlock premium skill badges.
-                    </p>
-                  </div>
-                </div>
               </div>
 
-              {/* Developer Bypass options */}
-              <div className="mt-8 border-t border-slate-200 pt-6">
-                <span className="text-[10px] uppercase font-mono text-slate-450 block mb-3 font-bold">
-                  Quick Access Sandbox Presets
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => handleQuickLogin("student")}
-                    className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-xs py-2 px-3.5 rounded-xl text-slate-700 shadow-sm font-semibold transition"
-                  >
-                    <GraduationCap className="w-3.5 h-3.5 text-emerald-600 font-bold" />
-                    Demo Student
-                  </button>
-                  <button
-                    onClick={() => handleQuickLogin("instructor")}
-                    className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-xs py-2 px-3.5 rounded-xl text-slate-700 shadow-sm font-semibold transition"
-                  >
-                    <Users className="w-3.5 h-3.5 text-amber-600 font-bold" />
-                    Demo Instructor
-                  </button>
-                  <button
-                    onClick={() => handleQuickLogin("admin")}
-                    className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-xs py-2 px-3.5 rounded-xl text-slate-700 shadow-sm font-semibold transition"
-                  >
-                    <Building className="w-3.5 h-3.5 text-rose-600 font-bold" />
-                    Demo Administrator
-                  </button>
-                </div>
-              </div>
             </div>
 
-            {/* Right side: Login form card */}
-            <div className="flex-1 bg-slate-50 flex items-center justify-center p-6 lg:p-12 border-t lg:border-t-0 lg:border-l border-slate-200 overflow-y-auto">
-              <div className="w-full max-w-sm space-y-6">
-                <div className="space-y-1">
-                  <h2 className="text-xl font-bold tracking-tight text-slate-900">
-                    {isSignUp ? "Create compliance account" : "Welcome back"}
-                  </h2>
-                  <p className="text-xs text-slate-500 font-medium">
-                    {isSignUp
-                      ? "Select your target workplace role below to sign up."
-                      : "Login to review your training or compliance records."}
+            {/* RIGHT SIDE: Dedicated industrial login form & live Sandbox dispatcher */}
+            <div className="w-full lg:w-[420px] bg-[#FAFAF9] flex flex-col justify-between overflow-y-auto shrink-0 divide-y divide-[#0B0B0C]/10">
+              
+              {/* Sandbox Control Console Header */}
+              <div className="p-6 space-y-4 bg-white">
+                <div className="space-y-1.5">
+                  <span className="text-[8px] bg-[#D7263D] text-white px-2 py-0.5 tracking-widest font-mono font-bold uppercase inline-block">
+                    DEVELOPER DEMO SYSTEM ACCESS
+                  </span>
+                  <h3 className="text-xs font-bold text-[#0B0B0C] uppercase tracking-wider font-mono">
+                    Sandbox Bypass Portal
+                  </h3>
+                  <p className="text-[10.5px] leading-relaxed text-[#8E8E93]">
+                    This compliance suite features 3 integrated role-based modules. Choose an active user role below to bypass authentication and audit the platform immediately.
                   </p>
                 </div>
 
+                <div className="space-y-2 pt-1">
+                  <button
+                    onClick={() => handleQuickLogin("student")}
+                    className="w-full text-left bg-[#FAFAF9] border border-[#0B0B0C]/10 hover:border-[#D7263D] p-3.5 transition flex items-center justify-between"
+                  >
+                    <div>
+                      <span className="text-[9px] font-mono text-[#D7263D] block font-bold">ROLE 01</span>
+                      <span className="text-[11px] text-[#0B0B0C] uppercase tracking-wide font-bold">STUDENT COMPLIANCE MODE</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-[#8E8E93] hover:text-[#D7263D]">[ ACTIVATE ]</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleQuickLogin("instructor")}
+                    className="w-full text-left bg-[#FAFAF9] border border-[#0B0B0C]/10 hover:border-[#D7263D] p-3.5 transition flex items-center justify-between"
+                  >
+                    <div>
+                      <span className="text-[9px] font-mono text-[#D7263D] block font-bold">ROLE 02</span>
+                      <span className="text-[11px] text-[#0B0B0C] uppercase tracking-wide font-bold">INSTRUCTOR AUDITOR WORKSPACE</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-[#8E8E93] hover:text-[#D7263D]">[ ACTIVATE ]</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleQuickLogin("admin")}
+                    className="w-full text-left bg-[#FAFAF9] border border-[#0B0B0C]/10 hover:border-[#D7263D] p-3.5 transition flex items-center justify-between"
+                  >
+                    <div>
+                      <span className="text-[9px] font-mono text-[#D7263D] block font-bold">ROLE 03</span>
+                      <span className="text-[11px] text-[#0B0B0C] uppercase tracking-wide font-bold">SYSTEM ADMINISTRATOR CONSOLE</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-[#8E8E93] hover:text-[#D7263D]">[ ACTIVATE ]</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* standard custom login/signup component */}
+              <div className="p-6 space-y-5 bg-white">
+                <div className="space-y-1">
+                  <h3 className="text-xs uppercase font-mono tracking-wider font-bold text-[#0B0B0C]">
+                    System Access Point
+                  </h3>
+                  <p className="text-[10.5px] text-slate-500 leading-snug">
+                    Toggle or fill below to authorize your regulatory-compliant credentials.
+                  </p>
+                </div>
+
+                {/* Highly interactive segment slider switch */}
+                <div className="grid grid-cols-2 p-1 bg-slate-100 border border-slate-200 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSignUp(false);
+                      setAuthError("");
+                    }}
+                    className={`py-2 text-[10px] font-mono font-bold uppercase rounded-md transition duration-200 ${
+                      !isSignUp
+                        ? "bg-[#0B0B0C] text-white shadow-sm"
+                        : "text-slate-500 hover:text-[#0B0B0C]"
+                    }`}
+                  >
+                    Secure Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSignUp(true);
+                      setAuthError("");
+                    }}
+                    className={`py-2 text-[10px] font-mono font-bold uppercase rounded-md transition duration-200 ${
+                      isSignUp
+                        ? "bg-[#0B0B0C] text-white shadow-sm"
+                        : "text-slate-500 hover:text-[#0B0B0C]"
+                    }`}
+                  >
+                    Register Profile
+                  </button>
+                </div>
+
                 {authError && (
-                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex gap-2 font-medium">
-                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
-                    <span>{authError}</span>
+                  <div className="p-3 bg-red-50 border border-[#D7263D] text-[#D7263D] text-[10.5px] font-mono">
+                    [ EXCEPTION ]: {authError}
                   </div>
                 )}
 
-                <form onSubmit={isSignUp ? handleSignUpSubmit : handleLoginSubmit} className="space-y-4">
+                {/* Live Real-time Identity Badge Preview */}
+                {isSignUp && (
+                  <div className="border border-slate-200 bg-slate-50/50 p-3 rounded-xl space-y-2 text-left relative overflow-hidden transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-1.5 h-full bg-[#D7263D]"></div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[8px] bg-slate-200 text-slate-700 px-1.5 py-0.5 font-mono font-black rounded uppercase tracking-wider">
+                        Verifiable Credential Card
+                      </span>
+                      <span className="text-[8px] font-mono text-emerald-600 animate-pulse font-bold">● IN DRAFT</span>
+                    </div>
+                    <div className="flex gap-2.5 items-center">
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-sm">
+                        {signupProfilePic ? (
+                          <img src={signupProfilePic} className="w-full h-full object-cover" referrerPolicy="no-referrer" alt="avatar" />
+                        ) : (
+                          <span className="text-slate-400 text-xs font-mono font-bold">FA</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-[11px] font-bold text-[#0B0B0C] truncate uppercase font-mono leading-tight">
+                          {authName.trim() || "Anonymous Trainee"}
+                        </h4>
+                        <p className="text-[9px] text-slate-500 truncate font-mono leading-none mt-0.5">
+                          {authEmail.trim() || "awaiting_workplace_email@..."}
+                        </p>
+                        <span className="inline-flex mt-1 text-[8px] font-mono font-black uppercase text-[#D7263D] bg-rose-50 border border-[#D7263D]/20 px-1 py-0.25">
+                          CLEARED FOR: {authRole.toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <form onSubmit={isSignUp ? handleSignUpSubmit : handleLoginSubmit} className="space-y-3.5">
                   {isSignUp && (
                     <>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase font-mono text-slate-500 block font-bold">Full Name</label>
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-mono text-slate-500 font-bold block">Full Name</label>
                         <input
                           type="text"
                           required
                           value={authName}
                           onChange={(e) => setAuthName(e.target.value)}
                           placeholder="e.g. Dr. John Doe"
-                          className="w-full bg-white border border-slate-200 text-xs rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-rose-500 placeholder-slate-400 shadow-sm transition"
+                          className="w-full bg-white border border-slate-200 text-xs px-3 py-2.5 focus:outline-none focus:border-[#D7263D] text-[#0B0B0C]"
                         />
                       </div>
 
-                      {/* Custom Avatar Preset Selection */}
+                      {/* Profile avatar choices */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase font-mono text-slate-500 block font-bold">Choose Profile Avatar</label>
+                        <label className="text-[9px] uppercase font-mono text-slate-500 font-bold block">Select Custom Persona Avatar</label>
                         <div className="flex gap-2 items-center py-1 overflow-x-auto">
                           {[
                             "Emma", "James", "Sophia", "Lucas", "Aria", "Oliver"
@@ -774,9 +1196,10 @@ export default function App() {
                                 key={seedName}
                                 type="button"
                                 onClick={() => setSignupProfilePic(url)}
-                                className={`w-9 h-9 rounded-full overflow-hidden border-2 shrink-0 transition ${
-                                  isSelected ? "border-rose-600 scale-105 shadow" : "border-transparent hover:scale-105"
+                                className={`w-9 h-9 rounded-full overflow-hidden border-2 transition duration-200 shrink-0 ${
+                                  isSelected ? "border-[#D7263D] scale-105 shadow-md" : "border-transparent opacity-60 hover:opacity-100 hover:scale-102"
                                 }`}
+                                title={`Choose avatar: ${seedName}`}
                               >
                                 <img src={url} alt={seedName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                               </button>
@@ -787,43 +1210,66 @@ export default function App() {
                     </>
                   )}
 
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono text-slate-500 block font-bold">Workplace Email</label>
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-mono text-slate-500 font-bold block">Workplace Email</label>
                     <input
                       type="email"
                       required
                       value={authEmail}
                       onChange={(e) => setAuthEmail(e.target.value)}
                       placeholder="you@workplace.com"
-                      className="w-full bg-white border border-slate-200 text-xs rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-rose-500 placeholder-slate-400 shadow-sm transition"
+                      className="w-full bg-white border border-slate-200 text-xs px-3 py-2.5 focus:outline-none focus:border-[#D7263D] text-[#0B0B0C]"
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono text-slate-500 block font-bold">Security Password</label>
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-mono text-slate-500 font-bold block">Security Password</label>
                     <input
                       type="password"
                       required
                       value={authPassword}
                       onChange={(e) => setAuthPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full bg-white border border-slate-200 text-xs rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-rose-500 placeholder-slate-400 shadow-sm transition"
+                      className="w-full bg-white border border-slate-200 text-xs px-3 py-2.5 focus:outline-none focus:border-[#D7263D] text-[#0B0B0C]"
                     />
+
+                    {/* Interactive Real-Time Password Strength Meter */}
+                    {authPassword && (
+                      <div className="mt-1.5 space-y-1 animate-fadeIn">
+                        <div className="flex justify-between items-center text-[8px] font-mono font-bold uppercase">
+                          <span className="text-slate-400">Clearance Strength:</span>
+                          <span className={
+                            authPassword.length < 5 ? "text-red-600" :
+                            authPassword.length < 8 ? "text-amber-600" :
+                            "text-emerald-600"
+                          }>
+                            {authPassword.length < 5 ? "⚠️ INSUFFICIENT" :
+                             authPassword.length < 8 ? "⚡ COMPLIANT" :
+                             "🛡️ ULTRA-SECURE"}
+                          </span>
+                        </div>
+                        <div className="h-[3px] bg-slate-100 rounded-full overflow-hidden flex gap-0.5">
+                          <div className={`h-full flex-1 transition-all duration-300 ${authPassword.length > 0 ? (authPassword.length < 5 ? 'bg-red-500' : authPassword.length < 8 ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-transparent'}`}></div>
+                          <div className={`h-full flex-1 transition-all duration-300 ${authPassword.length >= 5 ? (authPassword.length < 8 ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-transparent'}`}></div>
+                          <div className={`h-full flex-1 transition-all duration-300 ${authPassword.length >= 8 ? 'bg-emerald-500' : 'bg-transparent'}`}></div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {isSignUp && (
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] uppercase font-mono text-slate-500 block font-bold">Workspace Role</label>
-                      <div className="grid grid-cols-3 gap-1.5">
+                    <div className="space-y-1">
+                      <label className="text-[9px] uppercase font-mono text-slate-500 font-bold block">Workspace Role Access</label>
+                      <div className="grid grid-cols-3 gap-1">
                         {(["student", "instructor", "admin"] as const).map((role) => (
                           <button
                             key={role}
                             type="button"
                             onClick={() => setAuthRole(role)}
-                            className={`py-2 px-1 text-[10px] font-bold uppercase rounded-lg border transition ${
+                            className={`py-2 text-[9px] font-mono uppercase font-black border transition-all duration-200 rounded-md ${
                               authRole === role
-                                ? "bg-rose-600 border-rose-500 text-white"
-                                : "bg-white border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 hover:border-slate-300 shadow-sm"
+                                ? "bg-[#0B0B0C] border-[#0B0B0C] text-white shadow-sm"
+                                : "bg-white border-slate-200 text-slate-500 hover:text-[#0B0B0C] hover:border-slate-300"
                             }`}
                           >
                             {role}
@@ -836,45 +1282,70 @@ export default function App() {
                   <button
                     type="submit"
                     disabled={authLoading}
-                    className="w-full bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs py-3.5 rounded-xl transition shadow-lg shadow-rose-600/15"
+                    className="w-full bg-[#D7263D] hover:bg-[#C21D32] text-white uppercase font-mono font-bold text-xs py-3 tracking-widest transition shadow-sm hover:shadow-md active:scale-99"
                   >
-                    {authLoading ? "Verifying..." : isSignUp ? "Create Workspace Account" : "Access compliance records"}
+                    {authLoading ? "VERIFYING AUTHORIZATION..." : isSignUp ? "CREATE NEW IDENTITY" : "SIGN IN TO SYSTEM"}
                   </button>
 
-                  <div className="relative flex py-2 items-center">
-                    <div className="flex-grow border-t border-slate-200"></div>
-                    <span className="flex-shrink mx-4 text-[9px] font-mono text-slate-450 uppercase font-black">Or</span>
-                    <div className="flex-grow border-t border-slate-200"></div>
+                  <div className="relative flex py-1 items-center">
+                    <div className="flex-grow border-t border-slate-100"></div>
+                    <span className="flex-shrink mx-3 text-[8px] font-mono text-slate-400 uppercase font-bold">Or</span>
+                    <div className="flex-grow border-t border-slate-100"></div>
                   </div>
 
+                  {/* Clean white Google login button with official Google colored logo & no dark-on-dark text */}
                   <button
                     type="button"
                     onClick={handleGoogleSignIn}
-                    className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs py-3 rounded-xl border border-slate-200 font-bold shadow-sm transition"
+                    className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 text-[#0B0B0C] text-xs py-3 border border-slate-200 font-mono uppercase tracking-wider font-bold transition shadow-sm rounded-lg hover:shadow-md active:scale-98"
                   >
                     <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                      <path
+                        fill="#4285F4"
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                      />
                     </svg>
                     Continue with Google
                   </button>
                 </form>
 
-                <div className="text-center pt-2">
+                <div className="text-center pt-1">
                   <button
                     onClick={() => {
                       setIsSignUp(!isSignUp);
                       setAuthError("");
                     }}
-                    className="text-xs text-rose-600 hover:text-rose-750 font-bold transition"
+                    className="text-[10px] text-[#D7263D] hover:underline uppercase font-mono tracking-wider font-bold"
                   >
-                    {isSignUp ? "Already have a compliance login?" : "Need to register a new student/officer?"}
+                    {isSignUp ? "Already registered? Sign In" : "Register a Custom Profile"}
                   </button>
                 </div>
               </div>
+
+              {/* Clean dense footer links */}
+              <div className="p-6 bg-white text-[9px] font-mono text-[#8E8E93] leading-relaxed space-y-1">
+                <p>© 2026 FIRST AIDLY.COMPLIANCE.TRAINING SYSTEMS INC.</p>
+                <p>REGULATORY COMPLIANCE SYSTEM ONLINE.</p>
+                <div className="flex gap-3 pt-1 text-[8.5px] font-bold">
+                  <a href="#compliance" className="hover:text-[#0B0B0C] uppercase">[ SECURITY CODES ]</a>
+                  <a href="#terms" className="hover:text-[#0B0B0C] uppercase">[ AUDIT CRITERIA ]</a>
+                </div>
+              </div>
+
             </div>
+
           </div>
         ) : currentUser.role === "student" ? (
           currentUser.isVerified === false ? (
@@ -1015,6 +1486,8 @@ export default function App() {
                       <CourseCatalog
                         courses={courses}
                         studentProgress={myProgress}
+                        countryContext={countryContext}
+                        setCountryContext={setCountryContext}
                         onSelectCourse={(course) => {
                           setSelectedCourse(course);
                           setStudentFlowStep("lessons");
@@ -1181,6 +1654,7 @@ export default function App() {
               {studentFlowStep === "lessons" && selectedCourse && (
                 <LessonViewer
                   course={selectedCourse}
+                  countryContext={countryContext}
                   onCompleteLessons={() => setStudentFlowStep("quiz")}
                   onBackToCatalog={() => {
                     setSelectedCourse(null);
@@ -1202,6 +1676,7 @@ export default function App() {
                 <SimulationRunner
                   course={selectedCourse}
                   studentId={currentUser.id}
+                  countryContext={countryContext}
                   onCompleteSimulation={handleCompleteSimulation}
                   onBackToQuiz={() => setStudentFlowStep("quiz")}
                 />
