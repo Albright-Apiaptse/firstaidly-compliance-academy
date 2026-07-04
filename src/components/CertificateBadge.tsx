@@ -58,8 +58,8 @@ export default function CertificateBadge({ certificate, onClose }: CertificateBa
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 mb-2">
             <Award className="w-6 h-6" />
           </div>
-          <h3 className="text-xs font-mono tracking-widest text-amber-700 uppercase">First Aid Training Certificate</h3>
-          <p className="text-xs text-slate-500 mt-1">First Aid Compliance & Certification</p>
+          <h3 className="text-xs font-mono tracking-widest text-amber-700 uppercase">firstaid.ly Training Certificate</h3>
+          <p className="text-xs text-slate-500 mt-1">firstaid.ly Compliance & Certification</p>
         </div>
 
         <div className="space-y-3.5 my-4">

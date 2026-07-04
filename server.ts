@@ -94,9 +94,9 @@ const initialData = {
   courses: [
     {
       id: "c-1",
-      title: "Cardiopulmonary Resuscitation (CPR) & AED",
-      description: "Learn how to perform high-quality CPR and utilize an Automated External Defibrillator (AED) for adults, children, and infants.",
-      category: "CPR",
+      title: "Cardiopulmonary Resuscitation (CPR [Cardiopulmonary Resuscitation]) & AED [Automated External Defibrillator]",
+      description: "Learn how to perform high-quality CPR [Cardiopulmonary Resuscitation] and utilize an AED [Automated External Defibrillator] for adults, children, and infants under African union regional guidelines.",
+      category: "CPR [Cardiopulmonary Resuscitation]",
       lessons: [
         {
           title: "Step 1: Assess the Scene & Response",
@@ -104,20 +104,20 @@ const initialData = {
           content: "Before approaching the victim, scan the environment for immediate hazards like traffic, fire, or exposed electricity. Tap the victim's shoulders firmly and shout loudly: 'Are you okay?!' If there is no response, they are unconscious and require urgent intervention."
         },
         {
-          title: "Step 2: Activating Emergency Care & Call 911",
+          title: "Step 2: Activating Emergency Care & Call 112 / 119",
           subtitle: "Activate emergency dispatch and locate a defibrillator.",
-          content: "Point directly at someone nearby and instruct them clearly: 'You, call 911 and get an AED!' If you are alone, place your phone on speakerphone, call 911, and begin CPR immediately while dispatch is online. Do not leave the victim to search for an AED unless one is within immediate sight."
+          content: "Point directly at someone nearby and instruct them clearly: 'You, call 112 (Cameroon National Emergency Number) or 119 (SAMU [Service d'Aide Médicale Urgente] Medical Emergency) and get an AED [Automated External Defibrillator]!' If you are alone, place your phone on speakerphone, call 112 / 119, and begin CPR [Cardiopulmonary Resuscitation] immediately while dispatch is online. Do not leave the victim to search for an AED [Automated External Defibrillator] unless one is within immediate sight."
         },
         {
           title: "Step 3: High-Quality Chest Compressions",
           subtitle: "Place hands on the center of the chest and push hard and fast.",
-          content: "Place the heel of one hand in the center of the victim's chest (lower half of the breastbone). Interlock your fingers with the other hand. Keep your elbows locked and shoulders directly over your hands. Compress the chest at least 2 to 2.4 inches deep, at a rapid pace of 100 to 120 beats per minute. Allow the chest to fully recoil between compressions.",
-          image: "/src/assets/images/cpr_guide_1782843315552.jpg"
+          content: "Place the heel of one hand in the center of the victim's chest (lower half of the breastbone). Interlock your fingers with the other hand. Keep your elbows locked and shoulders directly over your hands. Compress the chest at least 2 to 2.4 inches deep, at a rapid pace of 100 to 120 BPM [Beats Per Minute]. Allow the chest to fully recoil between compressions.",
+          image: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=1200&q=80"
         },
         {
-          title: "Step 4: Using the Automated Defibrillator (AED)",
+          title: "Step 4: Using the AED [Automated External Defibrillator]",
           subtitle: "Power on the device and follow visual/vocal prompts.",
-          content: "Power on the AED immediately. Remove clothing from the victim's chest and apply the adhesive pads: one on the upper right side below the collarbone, and the other on the lower left side below the armpit. Plug in the pad cable. Stand clear while the AED analyzes the heart rhythm. If a shock is advised, scream 'STAND CLEAR!' and press the orange shock button, then resume compressions."
+          content: "Power on the AED [Automated External Defibrillator] immediately. Remove clothing from the victim's chest and apply the adhesive pads: one on the upper right side below the collarbone, and the other on the lower left side below the armpit. Plug in the pad cable. Stand clear while the AED [Automated External Defibrillator] analyzes the heart rhythm. If a shock is advised, scream 'STAND CLEAR!' and press the orange shock button, then resume compressions."
         }
       ],
       videoUrl: "https://www.youtube.com/embed/O_49wMboL8g",
@@ -132,11 +132,11 @@ const initialData = {
             "140 to 160 compressions per minute"
           ],
           correctAnswerIndex: 2,
-          explanation: "High-quality CPR requires a compression rate of 100 to 120 compressions per minute."
+          explanation: "High-quality CPR [Cardiopulmonary Resuscitation] requires a compression rate of 100 to 120 compressions per minute."
         },
         {
           id: "q-1-2",
-          question: "When the AED is analyzing the heart rhythm, what should you do?",
+          question: "When the AED [Automated External Defibrillator] is analyzing the heart rhythm, what should you do?",
           options: [
             "Continue performing chest compressions",
             "Yell 'Stand Clear!' and ensure nobody is touching the victim",
@@ -144,7 +144,7 @@ const initialData = {
             "Check for a pulse"
           ],
           correctAnswerIndex: 1,
-          explanation: "Any contact with the victim during rhythm analysis can interfere with the AED's accuracy."
+          explanation: "Any contact with the victim during rhythm analysis can interfere with the AED's [Automated External Defibrillator] accuracy."
         },
         {
           id: "q-1-3",
@@ -160,13 +160,13 @@ const initialData = {
         }
       ],
       simulationScenario: {
-        title: "Sudden Collapse in the Mall",
-        description: "You are walking in a shopping mall when an adult male suddenly collapses. There are no signs of open wounds, but he is unconscious on the floor.",
-        initialState: "The victim is lying face-up on the hard floor. People are starting to gather around, looking panicked. You step forward to help.",
+        title: "Sudden Collapse in Yaoundé Marketplace",
+        description: "You are walking in a central marketplace in Yaoundé when an adult male suddenly collapses. There are no signs of open wounds, but he is unconscious on the floor.",
+        initialState: "The victim is lying face-up on the ground. People are starting to gather around, looking panicked. You step forward to help.",
         criticalSteps: [
           "Check the scene for safety",
           "Check for responsiveness (tap and shout)",
-          "Call 911 and request an AED",
+          "Call 112 (National Emergency) or 119 (SAMU [Service d'Aide Médicale Urgente] Medical Emergency) and request an AED [Automated External Defibrillator]",
           "Check for breathing (5-10 seconds)",
           "Start high-quality chest compressions immediately"
         ]
@@ -187,7 +187,7 @@ const initialData = {
           title: "Step 2: The Heimlich Maneuver (Abdominal Thrusts)",
           subtitle: "Secure the waist, lock hands above the navel, and thrust.",
           content: "Stand behind the victim and wrap your arms around their waist. Make a fist with one hand and place the thumb-side slightly above the victim's navel (well below the breastbone). Grasp your fist with your other hand. Deliver quick, powerful inward and upward thrusts to forcefully expel the lodged airway obstruction.",
-          image: "/src/assets/images/heimlich_guide_1782843327992.jpg"
+          image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80"
         },
         {
           title: "Step 3: Infant Choking Protocol",
@@ -197,7 +197,7 @@ const initialData = {
         {
           title: "Step 4: Unconscious Choking Protocol",
           subtitle: "Transition to chest compressions if they lose consciousness.",
-          content: "If a choking victim becomes unresponsive, carefully lower them to the hard floor. Call 911 immediately. Begin chest compressions. Each time you open the airway to give breaths, look inside the mouth. If you see the foreign object, perform a finger sweep to remove it. Do not do a blind finger sweep."
+          content: "If a choking victim becomes unresponsive, carefully lower them to the hard floor. Call 112 / 119 immediately. Begin chest compressions. Each time you open the airway to give breaths, look inside the mouth. If you see the foreign object, perform a finger sweep to remove it. Do not do a blind finger sweep."
         }
       ],
       videoUrl: "https://www.youtube.com/embed/uD9v6pY8CGo",
@@ -241,7 +241,7 @@ const initialData = {
     },
     {
       id: "c-3",
-      title: "Severe Bleeding & Wound Care",
+      title: "Severe Bleeding & Wound Care (Hemorrhage Management)",
       description: "Learn to control severe hemorrhaging using direct pressure, pressure dressings, and the critical application of a tourniquet.",
       category: "Bleeding",
       lessons: [
@@ -259,7 +259,7 @@ const initialData = {
           title: "Step 3: Applying a Tactical Tourniquet",
           subtitle: "Place high, tighten the windlass rod, and lock it.",
           content: "If bleeding on an arm or leg does not stop with direct pressure, apply a tourniquet. Place it 2 to 3 inches above the wound (never over a joint). Pull the band tight and secure it. Twist the windlass rod until the bleeding stops and the pulse below the wound is gone. Lock the rod in the clip, write the exact application time, and never loosen it.",
-          image: "/src/assets/images/tourniquet_guide_1782843341065.jpg"
+          image: "https://images.unsplash.com/photo-1603398938378-e54eab446dde?auto=format&fit=crop&w=1200&q=80"
         },
         {
           title: "Step 4: Preventing Shock & Patient Positioning",
@@ -295,11 +295,11 @@ const initialData = {
         }
       ],
       simulationScenario: {
-        title: "Industrial Workshop Accident",
+        title: "Industrial Workshop Accident in Douala Port",
         description: "A colleague misuses a circular saw, resulting in a deep, pulsing gash on their right forearm. Blood is squirting rapidly from the wound.",
         initialState: "The colleague is sitting on the floor, holding their arm. Crimson blood is actively spurting, soaking through their shirt sleeve rapidly.",
         criticalSteps: [
-          "Call 911 immediately",
+          "Call 112 (National Emergency) or 119 (SAMU [Service d'Aide Médicale Urgente] Medical Emergency) immediately",
           "Apply firm, direct pressure with a clean cloth/gauze",
           "If bleeding doesn't stop, apply a tourniquet 2 inches above the wound",
           "Tighten windlass until bleeding stops and note the application time"
@@ -308,35 +308,35 @@ const initialData = {
     },
     {
       id: "c-4",
-      title: "First Aid for Bites & Stings (including Snake Bites)",
-      description: "Learn critical first aid protocols for snake bites, insect stings, and animal bites. Master pressure immobilization to slow venom flow.",
+      title: "First Aid for Bites & Stings (including Venomous Snake Bites)",
+      description: "Learn critical first aid protocols for snake bites, insect stings, and animal bites. Master PIB [Pressure Immobilization Bandage] to slow venom flow.",
       category: "Bites & Stings",
       lessons: [
         {
-          title: "Step 1: Snake Bites and Pressure Immobilization Bandaging",
+          title: "Step 1: Snake Bites and PIB [Pressure Immobilization Bandage] Protocol",
           subtitle: "Keep the limb still and do NOT cut or suction.",
-          content: "For venomous snake bites (vipers, cobras), keep the victim lying completely still to slow venom flow. Apply a snug Pressure Immobilization Bandage (PIB) starting at the fingers/toes and wrapping upwards over the entire limb. It should be snug like a sprained ankle wrap, but not cut off blood circulation. Do NOT cut the wound, do NOT apply suction (no sucking venom out), do NOT apply ice, and do NOT use a tight tourniquet! Seek emergency serum treatment immediately.",
-          image: "/src/assets/images/tourniquet_guide_1782843341065.jpg"
+          content: "For venomous snake bites (vipers, cobras), keep the victim lying completely still to slow venom flow. Apply a snug PIB [Pressure Immobilization Bandage] starting at the fingers/toes and wrapping upwards over the entire limb. It should be snug like a sprained ankle wrap, but not cut off blood circulation. Do NOT cut the wound, do NOT apply suction (no sucking venom out), do NOT apply ice, and do NOT use a tight tourniquet! Seek emergency serum treatment immediately.",
+          image: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80"
         },
         {
           title: "Step 2: Bee, Wasp, and Scorpion Stings",
           subtitle: "Scrape the stinger off immediately and monitor for anaphylaxis.",
-          content: "When stung by a bee, scrape the stinger off immediately with a flat, rigid object (like a credit card or fingernail). Do not squeeze the stinger with tweezers, which can inject more venom. Wash the site with soap and water, apply cold compresses to reduce swelling, and monitor for signs of a severe allergic reaction (Anaphylaxis), such as difficulty breathing, hives, swelling of the throat or tongue. If anaphylaxis is present, administer an Epinephrine Auto-Injector (EpiPen) instantly."
+          content: "When stung by a bee, scrape the stinger off immediately with a flat, rigid object (like a credit card or fingernail). Do not squeeze the stinger with tweezers, which can inject more venom. Wash the site with soap and water, apply cold compresses to reduce swelling, and monitor for signs of a severe allergic reaction (Anaphylaxis), such as difficulty breathing, hives, swelling of the throat or tongue. If anaphylaxis is present, administer an Epinephrine Auto-Injector instantly."
         }
       ],
-      videoUrl: "https://www.youtube.com/embed/ NxO5Lvgq9eg",
+      videoUrl: "https://www.youtube.com/embed/NxO5Lvgq9eg",
       quizQuestions: [
         {
           id: "q-4-1",
           question: "What is the correct protocol for managing a venomous snake bite?",
           options: [
             "Apply ice and cut the wound to drain blood",
-            "Keep the limb still and apply a snug Pressure Immobilization Bandage from the extremity up",
+            "Keep the limb still and apply a snug PIB [Pressure Immobilization Bandage] from the extremity up",
             "Use suction tools to suck venom out of the puncture wounds",
             "Apply a tight tourniquet to stop all arterial blood flow"
           ],
           correctAnswerIndex: 1,
-          explanation: "Pressure Immobilization slows down the spread of venom through the lymphatic system. Cutting, suction, ice, or tight tourniquets can cause severe localized tissue damage and worsen outcomes."
+          explanation: "PIB [Pressure Immobilization Bandage] slows down the spread of venom through the lymphatic system. Cutting, suction, ice, or tight tourniquets can cause severe localized tissue damage and worsen outcomes."
         },
         {
           id: "q-4-2",
@@ -352,14 +352,14 @@ const initialData = {
         }
       ],
       simulationScenario: {
-        title: "Wilderness Snake Bite Emergency",
-        description: "While hiking in the forest, your friend is suddenly bitten on the lower leg by a venomous snake. They are in severe pain, and two puncture wounds are visible.",
+        title: "Wilderness Snake Bite Emergency near Mount Cameroon",
+        description: "While hiking near Mount Cameroon, your friend is suddenly bitten on the lower leg by a venomous snake. They are in severe pain, and two puncture wounds are visible.",
         initialState: "Your friend is sitting down, breathing rapidly, and clutched onto their leg. Swelling is starting around the ankle.",
         criticalSteps: [
           "Check the scene for hazards",
           "Have the victim lie completely still",
-          "Call 911/Medical emergency services",
-          "Apply a snug pressure immobilization bandage from the toes up to the thigh",
+          "Call 112 (National Emergency) or 119 (SAMU [Service d'Aide Médicale Urgente] Medical Emergency) immediately",
+          "Apply a snug PIB [Pressure Immobilization Bandage] from the toes up to the thigh",
           "Verify the wrap is snug but does not cut off circulation"
         ]
       }
@@ -373,12 +373,12 @@ const initialData = {
         {
           title: "Step 1: Categorizing and Treating Minor Burns",
           subtitle: "First & Second Degree Burns: Cool, Clean, and Cover.",
-          content: "First-degree burns cause redness and pain. Second-degree burns cause fluid-filled blisters and pain. For minor burns, use the '3 C's': COOL the burn by placing it under cold running tap water for at least 10 to 20 minutes (do NOT use ice, which damages tissues). CLEAR jewelry or tight clothing gently before swelling starts. COVER the burn loosely with sterile, non-stick gauze. Do NOT apply butter, oils, or toothpaste, which trap heat and cause infections."
+          content: "First-degree burns cause redness and pain. Second-degree burns cause fluid-filled blisters and pain. For minor burns, use the '3 C's': COOL the burn by placing it under cool running tap water for at least 10 to 20 minutes (do NOT use ice, which damages tissues). CLEAR jewelry or tight clothing gently before swelling starts. COVER the burn loosely with sterile, non-stick gauze. Do NOT apply butter, oils, or toothpaste, which trap heat and cause infections."
         },
         {
           title: "Step 2: Handling Major or Third-Degree Burns",
           subtitle: "Third-Degree Burns: Charring, zero pain, and life-threatening shock.",
-          content: "Third-degree burns involve all skin layers, showing white, dry, or charred skin. Because nerve endings are destroyed, the center of the burn may feel completely painless. Call 911 immediately. Do NOT remove burned clothing stuck to the skin. Do NOT soak major burns in water, as this can cause hypothermia and shock. Cover loosely with a clean, dry sheet, elevate burned areas above heart level if possible, and keep the victim warm."
+          content: "Third-degree burns involve all skin layers, showing white, dry, or charred skin. Because nerve endings are destroyed, the center of the burn may feel completely painless. Call 112 / 119 (National Emergency Services / SAMU [Service d'Aide Médicale Urgente] Medical Emergency) immediately. Do NOT remove burned clothing stuck to the skin. Do NOT soak major burns in water, as this can cause hypothermia and shock. Cover loosely with a clean, dry sheet, elevate burned areas above heart level if possible, and keep the victim warm."
         }
       ],
       videoUrl: "https://www.youtube.com/embed/NxO5Lvgq9eg",
@@ -424,7 +424,7 @@ const initialData = {
     {
       id: "c-6",
       title: "Fractures, Splinting & Accidents",
-      description: "Learn to identify open and closed fractures, apply rigid splints using everyday items, and monitor vital Pulse-Motor-Sensation (PMS) signals.",
+      description: "Learn to identify open and closed fractures, apply rigid splints using everyday items, and monitor vital PMS [Pulse, Motor, Sensation] signals.",
       category: "Fractures",
       lessons: [
         {
@@ -433,9 +433,9 @@ const initialData = {
           content: "A Closed Fracture has broken bone with intact skin. An Open Fracture has broken bone piercing through the skin. To treat a fracture, keep the limb absolutely still. Do not try to push a bone back in. Apply a rigid splint using cardboard, rolled newspaper, or branches, securing it with bandages, ties, or cloth. Ensure the splint immobilizes the joint ABOVE and the joint BELOW the fracture to prevent movement."
         },
         {
-          title: "Step 2: Checking PMS (Pulse, Motor, Sensation)",
-          subtitle: "Always check PMS before and after applying a splint.",
-          content: "Before and after tying any splint, perform the critical PMS check on the fingers or toes of that limb: 1. PULSE: Check circulation by squeezing the nail bed (color should return in under 2 seconds). 2. MOTOR: Ask the victim to wiggle their fingers/toes. 3. SENSATION: Touch a finger/toe and ask: 'Can you feel which finger I am pinching?' If PMS is compromised, loosen the bandages immediately."
+          title: "Step 2: Checking PMS [Pulse, Motor, Sensation]",
+          subtitle: "Always check PMS [Pulse, Motor, Sensation] before and after applying a splint.",
+          content: "Before and after tying any splint, perform the critical PMS [Pulse, Motor, Sensation] check on the fingers or toes of that limb: 1. PULSE: Check circulation by squeezing the nail bed (color should return in under 2 seconds). 2. MOTOR: Ask the victim to wiggle their fingers/toes. 3. SENSATION: Touch a finger/toe and ask: 'Can you feel which finger I am pinching?' If PMS [Pulse, Motor, Sensation] is compromised, loosen the bandages immediately."
         }
       ],
       videoUrl: "https://www.youtube.com/embed/NxO5Lvgq9eg",
@@ -450,7 +450,7 @@ const initialData = {
             "Pain, Mobility, Swelling"
           ],
           correctAnswerIndex: 1,
-          explanation: "PMS stands for Pulse (checking circulation), Motor (checking nerve control to muscles), and Sensation (checking sensory nerve integrity)."
+          explanation: "PMS [Pulse, Motor, Sensation] stands for Pulse (checking circulation), Motor (checking nerve control to muscles), and Sensation (checking sensory nerve integrity)."
         },
         {
           id: "q-6-2",
@@ -471,10 +471,10 @@ const initialData = {
         initialState: "The cyclist is holding their forearm, groaning in severe pain. There is no open bleeding, but the forearm looks twisted.",
         criticalSteps: [
           "Check the scene for passing cyclists or hazards",
-          "Expose the arm and check circulation/Pulse, Motor, and Sensation (PMS)",
+          "Expose the arm and check circulation/PMS [Pulse, Motor, Sensation]",
           "Construct a rigid splint using cardboard or branches and cloth",
           "Immobilize the wrist and elbow joints with the splint",
-          "Recheck PMS on the fingers to make sure wrap is not too tight"
+          "Recheck PMS [Pulse, Motor, Sensation] on the fingers to make sure wrap is not too tight"
         ]
       }
     }
@@ -790,7 +790,11 @@ readDB();
 app.post("/api/auth/login", (req, res) => {
   const { email, password } = req.body;
   const db = readDB();
-  const user = db.users.find((u: any) => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+  
+  const cleanEmail = email ? email.trim().toLowerCase() : "";
+  const cleanPassword = password ? password.trim() : "";
+
+  const user = db.users.find((u: any) => u.email.trim().toLowerCase() === cleanEmail && u.password.trim() === cleanPassword);
   
   if (!user) {
     return res.status(401).json({ error: "Invalid email or password." });
@@ -799,7 +803,7 @@ app.post("/api/auth/login", (req, res) => {
   res.json({
     user: {
       id: user.id,
-      email: user.email,
+      email: user.email.trim(),
       name: user.name,
       role: user.role,
       profilePic: user.profilePic || `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.name}`,
@@ -819,15 +823,19 @@ app.post("/api/auth/signup", (req, res) => {
     return res.status(400).json({ error: "All fields are required." });
   }
 
-  if (db.users.find((u: any) => u.email.toLowerCase() === email.toLowerCase())) {
+  const cleanEmail = email.trim();
+  const cleanPassword = password.trim();
+  const cleanName = name.trim();
+
+  if (db.users.find((u: any) => u.email.trim().toLowerCase() === cleanEmail.toLowerCase())) {
     return res.status(400).json({ error: "A user with this email already exists." });
   }
 
   const newUser = {
     id: `u-${Date.now()}`,
-    email,
-    name,
-    password,
+    email: cleanEmail,
+    name: cleanName,
+    password: cleanPassword,
     role: role || "student",
     profilePic: profilePic || `https://api.dicebear.com/7.x/adventurer/svg?seed=${name}`,
     isVerified: role === "instructor" || role === "admin" ? true : false, // Students need OTP verification

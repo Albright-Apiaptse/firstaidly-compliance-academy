@@ -13,7 +13,7 @@ interface SimulationRunnerProps {
 const COMMON_ACTIONS = [
   "Check the scene for hazards and ensure it is safe to approach",
   "Tap the victim's shoulder and shout 'Are you okay?' to check responsiveness",
-  "Call 911 immediately and request bystanders search for an AED",
+  "Call Local Emergency Dispatch (112 or 119) immediately and request bystanders search for an AED [Automated External Defibrillator]",
   "Check for breathing and a pulse for no more than 10 seconds",
   "Begin high-quality chest compressions immediately",
   "Give 2 gentle rescue breaths",
@@ -48,10 +48,10 @@ export default function SimulationRunner({ course, studentId, onCompleteSimulati
   const scenario = course.simulationScenario;
   const profile = COUNTRY_PROFILES[countryContext] || COUNTRY_PROFILES.Cameroon;
 
-  // Adapt the hardcoded 911 call action into the specific local African emergency context
+  // Adapt the action into the specific local African emergency context
   const localizedCommonActions = COMMON_ACTIONS.map(action => {
-    if (action.includes("Call 911")) {
-      return `Call Local Emergency Dispatch (${profile.primaryNumber} or ${profile.ambulance.split(" ")[0]} in ${profile.name}) immediately and request bystanders search for an AED`;
+    if (action.includes("Call Local Emergency Dispatch")) {
+      return `Call Local Emergency Dispatch (${profile.primaryNumber} or ${profile.ambulance.split(" ")[0]} in ${profile.name}) immediately and request bystanders search for an AED [Automated External Defibrillator]`;
     }
     return action;
   });

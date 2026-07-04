@@ -28,7 +28,8 @@ import {
   Check,
   ChevronLeft,
   Trophy,
-  Zap
+  Zap,
+  Camera
 } from "lucide-react";
 
 import PhoneMockup from "./components/PhoneMockup";
@@ -83,8 +84,19 @@ export default function App() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
-  const [signupProfilePic, setSignupProfilePic] = useState("https://api.dicebear.com/7.x/adventurer/svg?seed=Emma");
+  const [rememberMe, setRememberMe] = useState(true);
+  const [signupProfilePic, setSignupProfilePic] = useState("https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&h=150&q=80");
   const [activeWelcomeImgIndex, setActiveWelcomeImgIndex] = useState(0);
+
+  // Google custom Sign-In states
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [googleEmailInput, setGoogleEmailInput] = useState("");
+  const [googleNameInput, setGoogleNameInput] = useState("");
+  const [googleSelectedAvatar, setGoogleSelectedAvatar] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80");
+  const [googleMode, setGoogleMode] = useState<"chooser" | "form">("chooser");
+
+  // Ref for student profile picture upload
+  const studentProfilePicInputRef = React.useRef<HTMLInputElement>(null);
 
   // Interactive States for Vital Response High-Fidelity Landing Page
   const [landingSlide, setLandingSlide] = useState(0);
@@ -115,6 +127,29 @@ export default function App() {
       window.removeEventListener("mousemove", handleMouseMove);
       clearInterval(interval);
     };
+  }, []);
+
+  // Persistent login state loader
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("firstaid_user");
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        setCurrentUser(parsed);
+      }
+      
+      const storedEmail = localStorage.getItem("firstaid_remembered_email");
+      const storedPassword = localStorage.getItem("firstaid_remembered_password");
+      if (storedEmail) {
+        setAuthEmail(storedEmail);
+        setRememberMe(true);
+      }
+      if (storedPassword) {
+        setAuthPassword(storedPassword);
+      }
+    } catch (e) {
+      console.error("Failed to load persistent auth state from localStorage", e);
+    }
   }, []);
 
   // Localized AED database search
@@ -310,6 +345,18 @@ export default function App() {
         setAuthError(data.error || "Authentication failed.");
       } else {
         setCurrentUser(data.user);
+        try {
+          localStorage.setItem("firstaid_user", JSON.stringify(data.user));
+          if (rememberMe) {
+            localStorage.setItem("firstaid_remembered_email", authEmail.trim());
+            localStorage.setItem("firstaid_remembered_password", authPassword.trim());
+          } else {
+            localStorage.removeItem("firstaid_remembered_email");
+            localStorage.removeItem("firstaid_remembered_password");
+          }
+        } catch (storageErr) {
+          console.error("Storage save failed", storageErr);
+        }
         // Reset navigation
         setStudentFlowStep("catalog");
         setSelectedCourse(null);
@@ -350,6 +397,18 @@ export default function App() {
         setAuthError(data.error || "Registration failed.");
       } else {
         setCurrentUser(data.user);
+        try {
+          localStorage.setItem("firstaid_user", JSON.stringify(data.user));
+          if (rememberMe) {
+            localStorage.setItem("firstaid_remembered_email", authEmail.trim());
+            localStorage.setItem("firstaid_remembered_password", authPassword.trim());
+          } else {
+            localStorage.removeItem("firstaid_remembered_email");
+            localStorage.removeItem("firstaid_remembered_password");
+          }
+        } catch (storageErr) {
+          console.error("Storage save failed", storageErr);
+        }
         setStudentFlowStep("catalog");
         setSelectedCourse(null);
         setStudentTab("courses");
@@ -362,8 +421,16 @@ export default function App() {
     }
   };
 
-  // Auth - Google Sign-In Handler
-  const handleGoogleSignIn = async () => {
+  // Auth - Google Sign-In Handler (Trigger Modal)
+  const handleGoogleSignIn = () => {
+    setGoogleMode("chooser");
+    setGoogleEmailInput("");
+    setGoogleNameInput("");
+    setShowGoogleModal(true);
+  };
+
+  // Actual backend execution of Google Sign-In with personal/custom account
+  const executeGoogleSignIn = async (email: string, name: string, profilePic: string) => {
     setAuthLoading(true);
     setAuthError("");
     try {
@@ -371,9 +438,9 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: "google.responder@firstaid.ly",
-          name: "Dr. Alex Google",
-          profilePic: signupProfilePic || "https://api.dicebear.com/7.x/adventurer/svg?seed=Alex"
+          email: email.trim(),
+          name: name.trim() || "Google Responder",
+          profilePic: profilePic
         })
       });
       const data = await res.json();
@@ -381,9 +448,15 @@ export default function App() {
         setAuthError(data.error || "Google Sign-In failed.");
       } else {
         setCurrentUser(data.user);
+        try {
+          localStorage.setItem("firstaid_user", JSON.stringify(data.user));
+        } catch (storageErr) {
+          console.error("Storage save failed", storageErr);
+        }
         setStudentFlowStep("catalog");
         setSelectedCourse(null);
         setStudentTab("courses");
+        setShowGoogleModal(false);
         fetchBackendData();
       }
     } catch (err) {
@@ -393,10 +466,60 @@ export default function App() {
     }
   };
 
+  // Student profile picture manual file upload handler
+  const handleStudentProfilePicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentUser) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64String = event.target?.result as string;
+      if (!base64String) return;
+
+      try {
+        setAuthLoading(true);
+        const res = await fetch("/api/students/update-profile-pic", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: currentUser.id,
+            profilePic: base64String
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          // Update local state
+          const updatedUser = { ...currentUser, profilePic: base64String };
+          setCurrentUser(updatedUser);
+          localStorage.setItem("firstaid_user", JSON.stringify(updatedUser));
+          
+          // Update progress state
+          setProgress((prev) =>
+            prev.map((p) => (p.studentId === currentUser.id ? { ...p, profilePic: base64String } : p))
+          );
+        } else {
+          console.error("Profile picture update failed on server", data.error);
+        }
+      } catch (err) {
+        console.error("Profile picture update failed", err);
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleLogout = () => {
     setCurrentUser(null);
-    setAuthEmail("");
-    setAuthPassword("");
+    try {
+      localStorage.removeItem("firstaid_user");
+    } catch (storageErr) {
+      console.error("Storage clear failed", storageErr);
+    }
+    if (!rememberMe) {
+      setAuthEmail("");
+      setAuthPassword("");
+    }
     setAuthName("");
     setAuthError("");
     setIsSignUp(false);
@@ -635,24 +758,33 @@ export default function App() {
       {/* Universal Top Nav Header — Pure Industrial Minimalist */}
       <header className="h-16 bg-[#FAFAF9] border-b border-[#0B0B0C]/10 flex items-center justify-between px-6 z-30 shrink-0">
         <div className="flex items-center gap-4">
-          <div className="w-8 h-8 bg-[#D7263D] flex items-center justify-center text-white font-mono font-black text-xs select-none">
-            FA
+          <div className="w-8 h-8 rounded-full bg-[#D7263D] flex items-center justify-center text-white font-sans font-black text-sm shadow-sm select-none">
+            +
           </div>
           <div>
-            <h1 className="text-sm font-black tracking-wider text-[#0B0B0C] uppercase flex items-center gap-2 font-display">
-              First Aidly.compliance.training
-              <span className="text-[8px] bg-[#0B0B0C] text-white font-mono font-bold px-1.5 py-0.5 tracking-normal">
+            <h1 className="text-xl font-bold tracking-tight text-slate-800 font-sans flex items-center gap-2 leading-none">
+              firstaid.ly
+              <span className="text-[8px] bg-[#0B0B0C] text-white font-mono font-bold px-1.5 py-0.5 tracking-normal uppercase rounded-sm">
                 ACADEMY
               </span>
             </h1>
-            <p className="text-[9px] text-[#8E8E93] uppercase tracking-widest font-mono font-semibold">
+            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold mt-0.5">
               Emergency Compliance Portal
             </p>
           </div>
         </div>
 
         {currentUser ? (
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
+            {/* Desktop Header Profile Picture */}
+            <div className="w-8 h-8 rounded-full bg-rose-50 border border-slate-250 text-rose-600 font-bold flex items-center justify-center text-xs overflow-hidden shrink-0 shadow-sm">
+              {currentUser.profilePic ? (
+                <img src={currentUser.profilePic} alt={currentUser.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                currentUser.name.charAt(0)
+              )}
+            </div>
+
             <div className="hidden sm:flex flex-col items-end">
               <span className="text-xs font-semibold text-[#0B0B0C]">{currentUser.name}</span>
               <span className="text-[9px] font-mono uppercase tracking-widest text-[#D7263D] mt-0.5">
@@ -681,355 +813,60 @@ export default function App() {
           /* High-fidelity storytelling page deck with Slidebean Presentation Deck & Tesla aesthetic */
           <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden">
             
-            {/* LEFT SIDE: Slidebean-inspired Storytelling Presentation Canvas */}
-            <div className="flex-1 bg-[#FAFAF9] border-r border-[#0B0B0C]/10 flex flex-col h-full overflow-hidden relative">
-              
-              {/* Deck Presentation slide navigation menu bar */}
-              <div className="h-12 border-b border-[#0B0B0C]/10 px-6 flex items-center justify-between shrink-0 bg-[#FAFAF9]">
-                <div className="flex gap-4">
-                  {[0, 1, 2, 3, 4, 5].map((idx) => {
-                    const labelMap = ["Hero", "Stakes", "Process", "Reference", "AED Map", "Corporate"];
-                    const isActive = landingSlide === idx;
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => setLandingSlide(idx)}
-                        className={`text-[9px] uppercase tracking-widest font-mono font-bold border-b-2 py-3 transition ${
-                          isActive
-                             ? "border-[#D7263D] text-[#0B0B0C]"
-                             : "border-transparent text-[#8E8E93] hover:text-[#0B0B0C]"
-                        }`}
-                      >
-                        {labelMap[idx]}
-                      </button>
-                    );
-                  })}
+                        {/* LEFT PANEL: High-quality stock illustration / hero content with lots of negative space */}
+            <div className="hidden lg:flex lg:flex-1 bg-slate-50 flex-col justify-between p-16 relative overflow-hidden">
+              <div className="space-y-8 max-w-lg z-10">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-[#D7263D] flex items-center justify-center text-white font-sans font-black text-sm shadow-sm">
+                    +
+                  </div>
+                  <span className="text-xl font-bold tracking-tight text-slate-800 font-sans">firstaid.ly</span>
                 </div>
-                <div className="text-[9px] font-mono text-[#8E8E93]">
-                  Section 0{landingSlide + 1} / 06
-                </div>
-              </div>
-
-              {/* Dynamic Presentation Window */}
-              <div className="flex-1 overflow-y-auto p-8 lg:p-14 flex flex-col justify-between">
                 
-                {/* SLIDE CONTENT AREA */}
-                <div className="max-w-xl w-full my-auto space-y-8">
-                  {landingSlide === 0 && (
-                    <div className="space-y-6 animate-fadeIn">
-                      <span className="vital-micro-label text-[#8E8E93] block">
-                        FIRST AIDLY.COMPLIANCE.TRAINING — CERTIFIED FIRST AID TRAINING
-                      </span>
-                      <h1 className="vital-hero-heading text-5xl lg:text-7xl text-[#0B0B0C] tracking-tight font-light">
-                        Know what to do before it matters.
-                      </h1>
-                      <div className="w-12 h-[2px] bg-[#D7263D]"></div>
-                      
-                      <div className="text-xs text-[#0B0B0C] leading-relaxed max-w-md font-normal space-y-2">
-                        <p>
-                          First aid training requires absolute clarity and technical authority. We deploy clinical presentation decks paired with real-time diagnostic crisis simulations.
-                        </p>
-                        <div className="text-[10px] font-mono text-[#8E8E93] flex items-center gap-2 pt-2">
-                          <span className="w-2 h-2 rounded-full bg-[#D7263D] animate-ping"></span>
-                          <span>ACTIVE COMPLIANCE RECORDS: <strong className="text-[#0B0B0C]">{liveCounter.toLocaleString()}</strong></span>
-                        </div>
-                      </div>
-
-                      {/* Main Interactive Documentary Visual with Parallax Shift */}
-                      <div className="border border-[#0B0B0C]/10 relative group overflow-hidden bg-[#FAFAF9] aspect-video">
-                        <img
-                          src="/src/assets/images/first_aid_hero_1782836300067.jpg"
-                          alt="First Responder Clinical Operations"
-                          style={{
-                            transform: `translate(${mouseOffset.x * 12}px, ${mouseOffset.y * 12}px) scale(1.04)`,
-                            transition: "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)"
-                          }}
-                          className="w-full h-full object-cover filter contrast-105"
-                        />
-                        <div className="absolute bottom-3 left-3 bg-[#FAFAF9] border border-[#0B0B0C]/10 px-2.5 py-1">
-                          <span className="text-[8px] font-mono uppercase tracking-widest text-[#0B0B0C] font-semibold">
-                            CPR Manikin Training Module • Active Clinical Workspace
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {landingSlide === 1 && (
-                    <div className="space-y-6 animate-fadeIn">
-                      <span className="vital-micro-label text-[#D7263D] block">
-                        CLINICAL REALITY & SURVIVAL STATISTICS
-                      </span>
-                      <h2 className="text-4xl font-light text-[#0B0B0C] tracking-tight font-display">
-                        The stakes of response delay.
-                      </h2>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                        <div className="border-l border-[#0B0B0C] pl-4 space-y-1">
-                          <span className="text-6xl font-light font-display text-[#0B0B0C] leading-none block">08%</span>
-                          <p className="text-[10px] text-[#8E8E93] uppercase tracking-wider font-semibold">
-                            Average survival rate of out-of-hospital cardiac arrest without immediate bystander chest compressions.
-                          </p>
-                        </div>
-                        <div className="border-l border-[#D7263D] pl-4 space-y-1">
-                          <span className="text-6xl font-light font-display text-[#D7263D] leading-none block">3x</span>
-                          <p className="text-[10px] text-[#8E8E93] uppercase tracking-wider font-semibold">
-                            Increase in casualty survival likelihood when bystander CPR is initiated within the first 120 seconds.
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <p className="text-xs text-[#0B0B0C] leading-relaxed max-w-md font-normal">
-                        Every minute of delay reduces survival outcomes by 10%. Professional-grade training ensures direct response under intense physical stress conditions.
-                      </p>
-
-                      <div className="border border-[#0B0B0C]/10 relative overflow-hidden bg-[#FAFAF9] h-48">
-                        <img
-                          src="/src/assets/images/first_aid_hero_1782843292024.jpg"
-                          alt="First-Aid Trauma Equipment"
-                          className="w-full h-full object-cover filter contrast-105"
-                        />
-                        <div className="absolute bottom-3 left-3 bg-[#FAFAF9] border border-[#0B0B0C]/10 px-2.5 py-1">
-                          <span className="text-[8px] font-mono uppercase tracking-widest text-[#0B0B0C] font-semibold">
-                            Equipment Spec: Direct Wound Care Supplies
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {landingSlide === 2 && (
-                    <div className="space-y-6 animate-fadeIn">
-                      <span className="vital-micro-label text-[#8E8E93] block">
-                        COMPLIANCE CERTIFICATION PROCESS
-                      </span>
-                      <h2 className="text-4xl font-light text-[#0B0B0C] tracking-tight font-display">
-                        Three steps to compliance.
-                      </h2>
-                      
-                      <div className="space-y-4 pt-2">
-                        {[
-                          { num: "01", title: "Study clinical curriculum outlines", desc: "Absorb high-resolution, interactive lessons built with certified critical care professionals." },
-                          { num: "02", title: "Complete theoretical evaluations", desc: "Pass Randomized Multiple-Choice block evaluations with a strict 70% grading threshold." },
-                          { num: "03", title: "Interact with AI emergency simulators", desc: "Execute step-by-step physical crisis responses in live-graded stress scenarios." }
-                        ].map((step, idx) => (
-                          <div key={idx} className="flex gap-4 border-b border-[#0B0B0C]/10 pb-3 last:border-0">
-                            <span className="text-lg font-mono text-[#D7263D] font-bold">{step.num}</span>
-                            <div>
-                              <h4 className="text-xs uppercase font-mono tracking-wider text-[#0B0B0C] font-bold">{step.title}</h4>
-                              <p className="text-[11px] text-[#8E8E93] mt-0.5 leading-relaxed font-normal">{step.desc}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="border border-[#0B0B0C]/10 relative overflow-hidden h-40">
-                        <img
-                          src="/src/assets/images/cpr_guide_1782843315552.jpg"
-                          alt="Emergency Clinical Instruction"
-                          className="w-full h-full object-cover filter contrast-105"
-                        />
-                        <div className="absolute bottom-3 left-3 bg-[#FAFAF9] border border-[#0B0B0C]/10 px-2.5 py-1">
-                          <span className="text-[8px] font-mono uppercase tracking-widest text-[#0B0B0C] font-semibold">
-                            Classroom Compliance: Group First Responder Drills
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {landingSlide === 3 && (
-                    <div className="space-y-4 animate-fadeIn">
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3">
-                        <div>
-                          <span className="vital-micro-label text-[#8E8E93] block">
-                            CRITICAL EMERGENCY REFERENCE INDEX
-                          </span>
-                          <h2 className="text-3xl font-light text-[#0B0B0C] tracking-tight font-display mt-1">
-                            Emergency index logs.
-                          </h2>
-                        </div>
-                        {/* Interactive Protocol Search Bar */}
-                        <input
-                          type="text"
-                          value={emergencySearch}
-                          onChange={(e) => setEmergencySearch(e.target.value)}
-                          placeholder="Filter medical index..."
-                          className="bg-white border border-[#0B0B0C]/10 px-3 py-1.5 text-xs w-full md:w-44 focus:outline-none focus:border-[#D7263D] text-[#0B0B0C]"
-                        />
-                      </div>
-
-                      <div className="border border-[#0B0B0C]/10 divide-y divide-[#0B0B0C]/10 bg-white">
-                        {EMERGENCY_PROTOCOLS.filter(p => p.title.toLowerCase().includes(emergencySearch.toLowerCase()) || p.spec.toLowerCase().includes(emergencySearch.toLowerCase()))
-                          .map((proto) => {
-                            const isExpanded = expandedReference === proto.id;
-                            return (
-                              <div key={proto.id} className="p-3.5">
-                                <button
-                                  type="button"
-                                  onClick={() => setExpandedReference(isExpanded ? null : proto.id)}
-                                  className="w-full text-left flex justify-between items-center"
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[8px] bg-[#0B0B0C] text-white font-mono px-1.5 py-0.5 uppercase tracking-wider">
-                                      {proto.actionLabel}
-                                    </span>
-                                    <span className="text-xs font-bold tracking-wide text-[#0B0B0C] uppercase font-mono">
-                                      {proto.title}
-                                    </span>
-                                  </div>
-                                  <span className="text-[9px] text-[#D7263D] font-mono font-bold">
-                                    {isExpanded ? "[ CLOSE SPEC ]" : "[ DETAILED SPEC ]"}
-                                  </span>
-                                </button>
-                                
-                                {isExpanded && (
-                                  <div className="mt-3 pt-3 border-t border-[#0B0B0C]/10 space-y-2 animate-slideIn">
-                                    <p className="text-[10.5px] text-[#0B0B0C] bg-[#FAFAF9] p-3 border-l-2 border-[#D7263D] font-mono">
-                                      {proto.spec}
-                                    </p>
-                                    <ul className="space-y-1.5 pl-4 list-decimal text-[11px] text-[#8E8E93] leading-relaxed">
-                                      {proto.instructions.map((inst, i) => (
-                                        <li key={i}>{inst}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                      </div>
-                    </div>
-                  )}
-
-                  {landingSlide === 4 && (
-                    <div className="space-y-4 animate-fadeIn">
-                      <span className="vital-micro-label text-[#8E8E93] block">
-                        DYNAMIC DEPLOYMENT REGISTRY
-                      </span>
-                      <h2 className="text-4xl font-light text-[#0B0B0C] tracking-tight font-display">
-                        Find an AED station.
-                      </h2>
-                      <p className="text-[11px] text-[#8E8E93] leading-relaxed max-w-md">
-                        Enter territory keywords to query regional public access defibrillators (AED) or local regulatory compliance centers.
-                      </p>
-
-                      <form onSubmit={handleAedSearch} className="flex gap-1.5">
-                        <input
-                          type="text"
-                          value={aedQuery}
-                          onChange={(e) => setAedQuery(e.target.value)}
-                          placeholder="e.g. Yaoundé or San Francisco..."
-                          className="flex-1 bg-white border border-[#0B0B0C]/10 px-3.5 py-2 text-xs focus:outline-none focus:border-[#D7263D] text-[#0B0B0C]"
-                        />
-                        <button
-                          type="submit"
-                          className="bg-[#0B0B0C] hover:bg-[#D7263D] text-white px-5 py-2 text-xs uppercase font-mono tracking-wider font-bold transition duration-150"
-                        >
-                          {isSearchingAed ? "Querying..." : "Locate"}
-                        </button>
-                      </form>
-
-                      <div className="space-y-2 max-h-[180px] overflow-y-auto">
-                        {aedResults.length > 0 ? (
-                          aedResults.map((res, idx) => (
-                            <div key={idx} className="bg-white border border-[#0B0B0C]/10 p-3 flex justify-between items-center text-xs">
-                              <div className="space-y-0.5">
-                                <h4 className="font-mono text-[#0B0B0C] font-bold uppercase text-[10.5px]">{res.name}</h4>
-                                <p className="text-[10px] text-[#8E8E93]">{res.location} • <strong className="text-[#D7263D]">{res.dist}</strong></p>
-                              </div>
-                              <span className="text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-1.5 py-0.5 uppercase tracking-wide font-mono shrink-0">
-                                {res.status}
-                              </span>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="border border-dashed border-[#0B0B0C]/10 p-6 text-center text-[10.5px] text-[#8E8E93]">
-                            Enter a region above to query localized compliance databases. Try "Yaoundé" or "San Francisco".
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {landingSlide === 5 && (
-                    <div className="space-y-6 animate-fadeIn">
-                      <span className="vital-micro-label text-[#D7263D] block">
-                        REGULATORY STANDARDS COMPLIANCE
-                      </span>
-                      <h2 className="text-4xl font-light text-[#0B0B0C] tracking-tight font-display">
-                        B2B & Enterprise.
-                      </h2>
-                      <p className="text-xs text-[#0B0B0C] leading-relaxed font-normal max-w-md">
-                        First Aidly.compliance.training fulfills first aid preparedness requirements in strict accordance with OSHA Standard 1910.151, MENT, and AHA/ILCOR emergency consensus reviews.
-                      </p>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                        <div className="bg-white p-3.5 border border-[#0B0B0C]/10 space-y-1">
-                          <span className="text-[10px] font-mono text-[#D7263D] font-bold block">OSHA COMPLIANT</span>
-                          <p className="text-[10px] text-[#8E8E93]">Satisfies workplace first-aid responder certification protocols.</p>
-                        </div>
-                        <div className="bg-white p-3.5 border border-[#0B0B0C]/10 space-y-1">
-                          <span className="text-[10px] font-mono text-[#0B0B0C] font-bold block">AUTOMATED ALERTS</span>
-                          <p className="text-[10px] text-[#8E8E93]">Integrates with HR software to alert before credentials expire.</p>
-                        </div>
-                      </div>
-
-                      <div className="border border-[#0B0B0C]/10 relative overflow-hidden h-40">
-                        <img
-                          src="/src/assets/images/tourniquet_guide_1782843341065.jpg"
-                          alt="First Responder Clinical Operations"
-                          className="w-full h-full object-cover filter contrast-105"
-                        />
-                        <div className="absolute bottom-3 left-3 bg-[#FAFAF9] border border-[#0B0B0C]/10 px-2.5 py-1">
-                          <span className="text-[8px] font-mono uppercase tracking-widest text-[#0B0B0C] font-semibold">
-                            Trauma Drill Spec: Tourniquet Compression Layout
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                <div className="space-y-4">
+                  <h2 className="text-4xl lg:text-5xl font-light text-slate-900 tracking-tight leading-tight">
+                    Learn first aid.<br />
+                    Save lives.
+                  </h2>
+                  <div className="w-12 h-[3px] bg-[#D7263D]"></div>
+                  <p className="text-slate-600 text-sm leading-relaxed font-normal">
+                    Designed specifically for Cameroon and other African contexts. Master high-quality chest compressions (CPR [Cardiopulmonary Resuscitation]), choking relief, severe wound management, and snake bites in interactive diagnostic simulations.
+                  </p>
                 </div>
 
-                {/* BOTTOM BRAND FOOTER (Deck view selectors) */}
-                <div className="border-t border-[#0B0B0C]/10 pt-6 flex justify-between items-center shrink-0">
-                  <div className="flex gap-1">
-                    {[0, 1, 2, 3, 4, 5].map((idx) => (
-                      <span
-                        key={idx}
-                        className={`w-4 h-[2px] transition-all duration-200 ${
-                          landingSlide === idx ? "bg-[#D7263D] w-8" : "bg-[#0B0B0C]/10"
-                        }`}
-                      ></span>
-                    ))}
+                <div className="pt-6 grid grid-cols-2 gap-6 border-t border-slate-200">
+                  <div className="space-y-1">
+                    <span className="text-3xl font-light text-slate-900">140k+</span>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold font-mono">
+                      Responders Trained
+                    </p>
                   </div>
-
-                  <div className="flex gap-4">
-                    <button
-                      type="button"
-                      disabled={landingSlide === 0}
-                      onClick={() => setLandingSlide(prev => prev - 1)}
-                      className={`text-[10px] font-mono uppercase tracking-wider transition ${
-                        landingSlide === 0 ? "text-[#E5E5EA] cursor-not-allowed" : "text-[#0B0B0C] hover:text-[#D7263D]"
-                      }`}
-                    >
-                      [ PREV SLIDE ]
-                    </button>
-                    <button
-                      type="button"
-                      disabled={landingSlide === 5}
-                      onClick={() => setLandingSlide(prev => prev + 1)}
-                      className={`text-[10px] font-mono uppercase tracking-wider transition ${
-                        landingSlide === 5 ? "text-[#E5E5EA] cursor-not-allowed" : "text-[#0B0B0C] hover:text-[#D7263D]"
-                      }`}
-                    >
-                      [ NEXT SLIDE ]
-                    </button>
+                  <div className="space-y-1">
+                    <span className="text-3xl font-light text-[#D7263D]">100%</span>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold font-mono">
+                      Compliance Audited
+                    </p>
                   </div>
                 </div>
-
               </div>
 
+              {/* High-quality Stock Image Container representing professional first-responder medical care */}
+              <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-200 shadow-lg bg-slate-100 mt-6 shrink-0 z-10 max-w-lg">
+                <img
+                  src="https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80"
+                  alt="First-responder clinical medical training"
+                  className="w-full h-full object-cover filter contrast-[1.02]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                <div className="absolute bottom-4 left-4 text-white">
+                  <span className="text-[9px] font-mono uppercase tracking-widest text-slate-100 font-bold bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded">
+                    Clinical Skill Acquisition • Certified Responders
+                  </span>
+                </div>
+              </div>
+
+              {/* Ambient visual graphic accent */}
+              <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-slate-200/50 blur-3xl pointer-events-none"></div>
             </div>
 
             {/* RIGHT SIDE: Dedicated industrial login form & live Sandbox dispatcher */}
@@ -1187,21 +1024,25 @@ export default function App() {
                         <label className="text-[9px] uppercase font-mono text-slate-500 font-bold block">Select Custom Persona Avatar</label>
                         <div className="flex gap-2 items-center py-1 overflow-x-auto">
                           {[
-                            "Emma", "James", "Sophia", "Lucas", "Aria", "Oliver"
-                          ].map((seedName) => {
-                            const url = `https://api.dicebear.com/7.x/adventurer/svg?seed=${seedName}`;
-                            const isSelected = signupProfilePic === url;
+                            { name: "Emma", url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&h=150&q=80" },
+                            { name: "James", url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80" },
+                            { name: "Sophia", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80" },
+                            { name: "Lucas", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80" },
+                            { name: "Aria", url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&h=150&q=80" },
+                            { name: "Oliver", url: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=150&h=150&q=80" }
+                          ].map((avatar) => {
+                            const isSelected = signupProfilePic === avatar.url;
                             return (
                               <button
-                                key={seedName}
+                                key={avatar.name}
                                 type="button"
-                                onClick={() => setSignupProfilePic(url)}
+                                onClick={() => setSignupProfilePic(avatar.url)}
                                 className={`w-9 h-9 rounded-full overflow-hidden border-2 transition duration-200 shrink-0 ${
                                   isSelected ? "border-[#D7263D] scale-105 shadow-md" : "border-transparent opacity-60 hover:opacity-100 hover:scale-102"
                                 }`}
-                                title={`Choose avatar: ${seedName}`}
+                                title={`Choose avatar: ${avatar.name}`}
                               >
-                                <img src={url} alt={seedName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                <img src={avatar.url} alt={avatar.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                               </button>
                             );
                           })}
@@ -1336,7 +1177,7 @@ export default function App() {
 
               {/* Clean dense footer links */}
               <div className="p-6 bg-white text-[9px] font-mono text-[#8E8E93] leading-relaxed space-y-1">
-                <p>© 2026 FIRST AIDLY.COMPLIANCE.TRAINING SYSTEMS INC.</p>
+                <p>© 2026 FIRSTAID.LY COMPLIANCE SYSTEMS INC.</p>
                 <p>REGULATORY COMPLIANCE SYSTEM ONLINE.</p>
                 <div className="flex gap-3 pt-1 text-[8.5px] font-bold">
                   <a href="#compliance" className="hover:text-[#0B0B0C] uppercase">[ SECURITY CODES ]</a>
@@ -1368,13 +1209,27 @@ export default function App() {
                   {/* Top user bar */}
                   <div className="h-16 border-b border-slate-200 px-4 flex justify-between items-center shrink-0 bg-white">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-rose-50 border border-rose-200 text-rose-600 font-bold flex items-center justify-center text-xs overflow-hidden shrink-0 shadow-sm">
+                      <div 
+                        onClick={() => studentProfilePicInputRef.current?.click()}
+                        className="relative group w-9 h-9 rounded-full bg-rose-50 border border-rose-200 text-rose-600 font-bold flex items-center justify-center text-xs overflow-hidden shrink-0 shadow-sm cursor-pointer hover:border-rose-400 transition"
+                        title="Upload Custom Profile Picture"
+                      >
                         {currentUser.profilePic ? (
                           <img src={currentUser.profilePic} alt={currentUser.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         ) : (
                           currentUser.name.charAt(0)
                         )}
+                        <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-150">
+                          <Camera className="w-3.5 h-3.5 text-white" />
+                        </div>
                       </div>
+                      <input 
+                        type="file"
+                        ref={studentProfilePicInputRef}
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleStudentProfilePicUpload}
+                      />
                       <div>
                         <span className="text-[9px] uppercase font-mono text-slate-400 font-bold">Welcome Responder</span>
                         <h4 className="text-xs font-bold text-slate-800 leading-none">{currentUser.name}</h4>
@@ -1619,6 +1474,15 @@ export default function App() {
                                   {/* Rank Indicator */}
                                   <div className={`w-6 h-6 rounded-full border flex items-center justify-center font-mono text-[10px] font-bold ${rankColor}`}>
                                     {medalEmoji ? medalEmoji : rank}
+                                  </div>
+
+                                  {/* Profile Picture */}
+                                  <div className="w-8 h-8 rounded-full bg-rose-50 border border-slate-200 text-rose-600 font-bold flex items-center justify-center text-xs overflow-hidden shrink-0 shadow-sm">
+                                    {item.profilePic ? (
+                                      <img src={item.profilePic} alt={item.studentName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                    ) : (
+                                      item.studentName.charAt(0)
+                                    )}
                                   </div>
 
                                   <div>
@@ -2558,6 +2422,161 @@ export default function App() {
                 </div>
               )}
             </main>
+          </div>
+        )}
+        {/* Dynamic, Highly-Polished Google Sign-In Modal (Allows login with actual personal Google accounts) */}
+        {showGoogleModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="w-full max-w-[390px] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col p-8 font-sans">
+              {/* Google Logo Header */}
+              <div className="flex flex-col items-center text-center space-y-3 mb-6">
+                <div className="flex items-center gap-1">
+                  <span className="text-xl font-bold font-sans tracking-tight text-slate-800">
+                    <span className="text-[#4285F4]">G</span>
+                    <span className="text-[#EA4335]">o</span>
+                    <span className="text-[#FBBC05]">o</span>
+                    <span className="text-[#4285F4]">g</span>
+                    <span className="text-[#34A853]">l</span>
+                    <span className="text-[#EA4335]">e</span>
+                  </span>
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900 tracking-tight leading-tight">
+                  {googleMode === "chooser" ? "Choose an account" : "Sign in with Google"}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  to continue to <span className="font-bold text-rose-600">firstaid.ly</span>
+                </p>
+              </div>
+
+              {googleMode === "chooser" ? (
+                <div className="space-y-3 flex-1">
+                  {/* 1. Log in with detected personal account */}
+                  <button
+                    onClick={() =>
+                      executeGoogleSignIn(
+                        "njapahalbright@gmail.com",
+                        "Njapah Albright",
+                        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80"
+                      )
+                    }
+                    className="w-full flex items-center gap-3.5 p-3 hover:bg-slate-50 border border-slate-250 rounded-xl transition text-left focus:outline-none"
+                  >
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shadow-sm shrink-0">
+                      <img
+                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80"
+                        alt="avatar"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-xs font-bold text-slate-850 leading-snug">Njapah Albright</h4>
+                      <p className="text-[10px] text-slate-500 truncate leading-none">njapahalbright@gmail.com</p>
+                    </div>
+                    <span className="text-[9px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded font-bold uppercase">
+                      Signed In
+                    </span>
+                  </button>
+
+                  {/* 2. Choose/Use another account option */}
+                  <button
+                    onClick={() => setGoogleMode("form")}
+                    className="w-full flex items-center gap-3.5 p-3 hover:bg-slate-50 border border-slate-250 rounded-xl transition text-left focus:outline-none"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 shrink-0">
+                      <Plus className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-xs font-bold text-slate-700 leading-snug">Use another personal account</h4>
+                      <p className="text-[10px] text-slate-400">Log in with a different Gmail address</p>
+                    </div>
+                  </button>
+
+                  <div className="pt-6 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-500 font-medium">
+                    <span>English (United States)</span>
+                    <button onClick={() => setShowGoogleModal(false)} className="text-[#1a73e8] hover:underline font-bold">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    executeGoogleSignIn(googleEmailInput, googleNameInput, googleSelectedAvatar);
+                  }}
+                  className="space-y-4 flex-1"
+                >
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase font-mono text-slate-500 font-bold block">Google Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={googleEmailInput}
+                      onChange={(e) => setGoogleEmailInput(e.target.value)}
+                      placeholder="e.g. personal.name@gmail.com"
+                      className="w-full bg-white border border-slate-200 text-xs px-3.5 py-3 rounded-xl focus:outline-none focus:border-[#4285F4] text-slate-800 font-medium shadow-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase font-mono text-slate-500 font-bold block">Your Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={googleNameInput}
+                      onChange={(e) => setGoogleNameInput(e.target.value)}
+                      placeholder="e.g. John Doe"
+                      className="w-full bg-white border border-slate-200 text-xs px-3.5 py-3 rounded-xl focus:outline-none focus:border-[#4285F4] text-slate-800 font-medium shadow-sm"
+                    />
+                  </div>
+
+                  {/* Avatar selection for the custom Google sign in */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-mono text-slate-500 font-bold block">Choose Google Avatar Photo</label>
+                    <div className="flex gap-2 items-center py-1 overflow-x-auto justify-center">
+                      {[
+                        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&h=150&q=80",
+                        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80",
+                        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80",
+                        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80",
+                        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&h=150&q=80",
+                        "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=150&h=150&q=80"
+                      ].map((url, index) => {
+                        const isSelected = googleSelectedAvatar === url;
+                        return (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => setGoogleSelectedAvatar(url)}
+                            className={`w-9 h-9 rounded-full overflow-hidden border-2 transition duration-200 shrink-0 ${
+                              isSelected ? "border-[#4285F4] scale-105 shadow-md" : "border-transparent opacity-60 hover:opacity-100 hover:scale-102"
+                            }`}
+                          >
+                            <img src={url} alt={`avatar-${index}`} className="w-full h-full object-cover" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 flex items-center justify-between gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setGoogleMode("chooser")}
+                      className="text-xs text-[#1a73e8] font-bold hover:underline"
+                    >
+                      Back to Choose Account
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-bold px-6 py-2.5 rounded-full transition shadow-md"
+                    >
+                      Next / Sign In
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -117,11 +117,11 @@ export const COUNTRY_PROFILES: { [key: string]: CountryEmergencyProfile } = {
     name: "Cameroon",
     flag: "🇨🇲",
     primaryNumber: "112",
-    ambulance: "119 (SAMU)",
+    ambulance: "119 (SAMU [Service d'Aide Médicale Urgente])",
     police: "117",
     gendarmerie: "113",
     fire: "118 (Sapeurs-Pompiers)",
-    desc: "In Cameroon, emergency services are highly decentralized. Dial 112 from any mobile phone for general routing. For clinical emergencies, call 119 (SAMU) or 118 for Sapeurs-Pompiers."
+    desc: "In Cameroon, emergency services are highly decentralized. Dial 112 from any mobile phone for general routing. For clinical emergencies, call 119 (SAMU [Service d'Aide Médicale Urgente]) or 118 for Sapeurs-Pompiers."
   },
   Nigeria: {
     name: "Nigeria",
@@ -136,26 +136,26 @@ export const COUNTRY_PROFILES: { [key: string]: CountryEmergencyProfile } = {
     name: "Kenya",
     flag: "🇰🇪",
     primaryNumber: "112",
-    ambulance: "999 / 112 / 911",
+    ambulance: "999 / 112",
     police: "999 / 112",
     fire: "999",
-    desc: "Kenya's official emergency toll-free service is 999. Major mobile service providers also support 112 and 911."
+    desc: "Kenya's official emergency toll-free service is 999. Major mobile service providers also support 112."
   },
   Senegal: {
     name: "Senegal",
     flag: "🇸🇳",
     primaryNumber: "112",
-    ambulance: "15 (SAMU)",
+    ambulance: "15 (SAMU [Service d'Aide Médicale Urgente])",
     police: "17 (Police)",
     fire: "18 (Sapeurs-Pompiers)",
-    desc: "Senegal uses 17 for Police, 18 for Fire/Accidents, and 15 for SAMU medical triage. 112 is supported as a general mobile emergency line."
+    desc: "Senegal uses 17 for Police, 18 for Fire/Accidents, and 15 for SAMU [Service d'Aide Médicale Urgente] medical triage. 112 is supported as a general mobile emergency line."
   },
   "South Africa": {
     name: "South Africa",
     flag: "🇿🇦",
     primaryNumber: "112",
     ambulance: "10177 (Ambulance)",
-    police: "10111 (SAPS)",
+    police: "10111 (SAPS [South African Police Service])",
     fire: "10177",
     desc: "South Africa routes cell phone emergency calls to 112. Landline users dial 10111 for police and 10177 for medical emergency."
   }
