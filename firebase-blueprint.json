@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "User accounts with authentication details and roles (student, instructor, admin)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "instructor", "admin"] },
+        "profilePic": { "type": "string" },
+        "isVerified": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "email", "name", "role"]
+    },
+    "courses": {
+      "title": "Courses",
+      "description": "First aid learning modules and curriculum content",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "lessons": { "type": "array" },
+        "videoUrl": { "type": "string" },
+        "quizQuestions": { "type": "array" },
+        "simulationScenario": { "type": "object" },
+        "uploadedFiles": { "type": "array" }
+      },
+      "required": ["id", "title", "description", "category"]
+    },
+    "progress": {
+      "title": "Student Progress",
+      "description": "Trainee module completion, quiz scores, and certificate status",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentEmail": { "type": "string" },
+        "courseId": { "type": "string" },
+        "courseTitle": { "type": "string" },
+        "completedLessons": { "type": "array" },
+        "quizScore": { "type": "number" },
+        "simulationPassed": { "type": "boolean" },
+        "certificateIssued": { "type": "boolean" },
+        "issuedAt": { "type": "string" },
+        "expiresAt": { "type": "string" },
+        "profilePic": { "type": "string" }
+      },
+      "required": ["studentId", "courseId"]
+    },
+    "certificates": {
+      "title": "Certificates",
+      "description": "Verified emergency responder certification records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "courseId": { "type": "string" },
+        "courseTitle": { "type": "string" },
+        "issueDate": { "type": "string" },
+        "expiryDate": { "type": "string" },
+        "status": { "type": "string" },
+        "verificationCode": { "type": "string" },
+        "country": { "type": "string" }
+      },
+      "required": ["id", "studentId", "courseId", "verificationCode"]
+    }
+  }
+}

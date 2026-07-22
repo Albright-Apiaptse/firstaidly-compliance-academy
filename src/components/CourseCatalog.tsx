@@ -56,11 +56,11 @@ export default function CourseCatalog({ courses, studentProgress, onSelectCourse
         </div>
       </div>
 
-      {/* Regional Emergency Context Switcher styled as a Slidebean Editor Preset */}
+      {/* Regional Emergency Contact Section */}
       <div className="bg-slate-100 border border-slate-150 p-4 rounded-2xl shadow-md space-y-3.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-900 tracking-wider">
-            <span>🌍 Dynamic Territory Context</span>
+          <div className="flex items-center gap-2 text-xs font-bold uppercase text-slate-900 tracking-wider">
+            <span>📞 Get An Emergency Contact</span>
           </div>
           <span className="text-[10.5px] bg-rose-600 text-white font-black px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md shadow-rose-600/10">
             <span>{countryProfile.name}</span>
@@ -70,44 +70,68 @@ export default function CourseCatalog({ courses, studentProgress, onSelectCourse
         
         <div className="space-y-2">
           <label className="block text-[9px] font-black text-slate-450 uppercase tracking-widest leading-none">
-            Choose localized compliance rules:
+            Select a Country / Territory:
           </label>
-          <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-none">
-            {Object.keys(COUNTRY_PROFILES).map((key) => {
-              const item = COUNTRY_PROFILES[key];
-              const isSelected = countryContext === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setCountryContext(key)}
-                  className={`px-3.5 py-2 rounded-xl border text-[10px] font-black shrink-0 transition flex items-center gap-2 cursor-pointer ${
-                    isSelected
-                      ? "bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/10"
-                      : "bg-white text-slate-650 border-slate-200/80 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
-                >
-                  <span>{item.flag}</span>
-                  <span>{item.name}</span>
-                </button>
-              );
-            })}
-          </div>
+          <select
+            value={countryContext}
+            onChange={(e) => setCountryContext(e.target.value)}
+            className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl px-3.5 py-3 focus:outline-none focus:border-rose-500 shadow-sm transition"
+          >
+            <optgroup label="Africa">
+              <option value="Cameroon">🇨🇲 Cameroon</option>
+              <option value="Nigeria">🇳🇬 Nigeria</option>
+              <option value="Kenya">🇰🇪 Kenya</option>
+              <option value="Senegal">🇸🇳 Senegal</option>
+              <option value="South Africa">🇿🇦 South Africa</option>
+              <option value="Egypt">🇪🇬 Egypt</option>
+              <option value="Morocco">🇲🇦 Morocco</option>
+              <option value="Ghana">🇬🇭 Ghana</option>
+            </optgroup>
+            <optgroup label="Asia">
+              <option value="India">🇮🇳 India</option>
+              <option value="Japan">🇯🇵 Japan</option>
+              <option value="Singapore">🇸🇬 Singapore</option>
+              <option value="Pakistan">🇵🇰 Pakistan</option>
+            </optgroup>
+            <optgroup label="Middle East">
+              <option value="United Arab Emirates">🇦🇪 United Arab Emirates</option>
+              <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+              <option value="Lebanon">🇱🇧 Lebanon</option>
+              <option value="Jordan">🇯🇴 Jordan</option>
+              <option value="Turkey">🇹🇷 Turkey</option>
+            </optgroup>
+          </select>
         </div>
 
-        <div className="bg-white border border-slate-150 p-3.5 rounded-xl text-xs leading-relaxed text-slate-600 font-medium">
-          <strong className="text-slate-900 font-black block mb-1 uppercase tracking-wide text-[10px]">
-            🚨 Regional Protocol Blueprint:
+        <div className="bg-white border border-slate-150 p-4 rounded-xl text-xs leading-relaxed text-slate-600 font-medium">
+          <strong className="text-slate-900 font-black block mb-1.5 uppercase tracking-wide text-[10px]">
+            🚨 {countryProfile.name} Emergency Protocols & Numbers:
           </strong>
-          <p className="text-[10.5px] leading-relaxed text-slate-450 font-semibold mb-2.5">
+          <p className="text-[10.5px] leading-relaxed text-slate-400 font-semibold mb-3.5">
             {countryProfile.desc}
           </p>
-          <div className="flex flex-wrap gap-2 text-[9px] font-black text-rose-700 uppercase border-t border-slate-100 pt-2.5">
-            <span className="bg-rose-50 border border-rose-100 px-2 py-1 rounded shadow-sm">📱 general call: {countryProfile.primaryNumber}</span>
-            <span className="bg-rose-50 border border-rose-100 px-2 py-1 rounded shadow-sm">🚑 ambulance: {countryProfile.ambulance}</span>
-            <span className="bg-rose-50 border border-rose-100 px-2 py-1 rounded shadow-sm">🚒 fire brigade: {countryProfile.fire}</span>
+          <div className="grid grid-cols-2 gap-2 text-[10px] font-black uppercase pt-3 border-t border-slate-100">
+            <div className="bg-rose-50 border border-rose-100/60 p-2 rounded shadow-sm flex flex-col justify-between">
+              <span className="text-slate-400 text-[8px] tracking-wider block">📱 GENERAL EMERGENCY</span>
+              <span className="text-rose-700 text-xs font-black">{countryProfile.primaryNumber}</span>
+            </div>
+            <div className="bg-rose-50 border border-rose-100/60 p-2 rounded shadow-sm flex flex-col justify-between">
+              <span className="text-slate-400 text-[8px] tracking-wider block">🚑 AMBULANCE / MEDICAL</span>
+              <span className="text-rose-700 text-xs font-black">{countryProfile.ambulance}</span>
+            </div>
+            <div className="bg-rose-50 border border-rose-100/60 p-2 rounded shadow-sm flex flex-col justify-between">
+              <span className="text-slate-400 text-[8px] tracking-wider block">🚒 FIRE BRIGADE</span>
+              <span className="text-rose-700 text-xs font-black">{countryProfile.fire}</span>
+            </div>
+            <div className="bg-rose-50 border border-rose-100/60 p-2 rounded shadow-sm flex flex-col justify-between">
+              <span className="text-slate-400 text-[8px] tracking-wider block">👮 POLICE FORCE</span>
+              <span className="text-rose-700 text-xs font-black">{countryProfile.police}</span>
+            </div>
             {countryProfile.gendarmerie && (
-              <span className="bg-rose-50 border border-rose-100 px-2 py-1 rounded shadow-sm">👮 police force: {countryProfile.gendarmerie}</span>
+              <div className="bg-rose-50 border border-rose-100/60 p-2 rounded shadow-sm col-span-2 flex flex-col justify-between mt-1">
+                <span className="text-slate-400 text-[8px] tracking-wider block">🛡️ GENDARMERIE / NATIONAL SECURITY</span>
+                <span className="text-rose-700 text-xs font-black">{countryProfile.gendarmerie}</span>
+              </div>
             )}
           </div>
         </div>

@@ -13,13 +13,26 @@ export default function LessonViewer({ course, onCompleteLessons, onBackToCatalo
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
-  const [activeSidebarTab, setActiveSidebarTab] = useState<"slides" | "notes">("slides");
+  const [activeSidebarTab, setActiveSidebarTab] = useState<"slides" | "notes" | "files">("slides");
 
   const lessons = course.lessons;
   const hasVideo = !!course.videoUrl;
   const totalSlides = lessons.length + (hasVideo ? 1 : 0);
 
   const profile = COUNTRY_PROFILES[countryContext] || COUNTRY_PROFILES.Cameroon;
+
+  const personalizeText = (text: string | undefined): string => {
+    if (!text) return "";
+    let result = text;
+    result = result.replace(/112 \(Cameroon National Emergency Number\)/gi, `${profile.primaryNumber} (${profile.name} National Emergency Number)`);
+    result = result.replace(/119 \(SAMU \[Service d'Aide Médicale Urgente\] Medical Emergency\)/gi, `${profile.ambulance} (${profile.name} Medical Response)`);
+    result = result.replace(/119 \(SAMU Medical Emergency\)/gi, `${profile.ambulance} (${profile.name} Medical Response)`);
+    result = result.replace(/112 \/ 119/g, `${profile.primaryNumber} / ${profile.ambulance}`);
+    result = result.replace(/112 or 119/g, `${profile.primaryNumber} or ${profile.ambulance}`);
+    result = result.replace(/Call 112 \/ 119/gi, `Call ${profile.primaryNumber} / ${profile.ambulance}`);
+    result = result.replace(/Cameroon/g, profile.name);
+    return result;
+  };
 
   const handleNext = () => {
     if (currentSlide < totalSlides - 1) {
@@ -62,7 +75,7 @@ export default function LessonViewer({ course, onCompleteLessons, onBackToCatalo
                 📌 Category: {course.category} Certification
               </span>
               <h1 className="text-3xl sm:text-4.5xl font-black tracking-tight text-slate-900 leading-none font-display">
-                Welcome to: <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-rose-600 to-rose-500">{course.title}</span>
+                Welcome to: <span className="text-[#D7263D]">{course.title}</span>
               </h1>
               <p className="text-sm text-slate-400 leading-relaxed max-w-2xl font-medium">
                 {course.description}
@@ -176,7 +189,7 @@ export default function LessonViewer({ course, onCompleteLessons, onBackToCatalo
                 : "border-transparent text-slate-450 hover:text-slate-700"
             }`}
           >
-            📋 Slides Outline
+            📋 Slides
           </button>
           <button
             onClick={() => setActiveSidebarTab("notes")}
@@ -186,7 +199,17 @@ export default function LessonViewer({ course, onCompleteLessons, onBackToCatalo
                 : "border-transparent text-slate-450 hover:text-slate-700"
             }`}
           >
-            💡 Rescuer Guide
+            💡 Guide
+          </button>
+          <button
+            onClick={() => setActiveSidebarTab("files")}
+            className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-wider border-b-2 text-center transition ${
+              activeSidebarTab === "files"
+                ? "border-rose-600 text-rose-600 bg-slate-50"
+                : "border-transparent text-slate-450 hover:text-slate-700"
+            }`}
+          >
+            📁 Files ({course.uploadedFiles?.length || 0})
           </button>
         </div>
 
@@ -222,10 +245,10 @@ export default function LessonViewer({ course, onCompleteLessons, onBackToCatalo
                     </span>
                     <div className="space-y-0.5 overflow-hidden">
                       <span className="text-[10.5px] font-black text-slate-800 block truncate leading-tight">
-                        {lesson.title}
+                        {personalizeText(lesson.title)}
                       </span>
                       <span className="text-[9px] text-slate-400 font-medium block truncate">
-                        {lesson.subtitle || "Theory Blueprint Step"}
+                        {personalizeText(lesson.subtitle) || "Theory Blueprint Step"}
                       </span>
                     </div>
                   </button>
@@ -262,7 +285,7 @@ export default function LessonViewer({ course, onCompleteLessons, onBackToCatalo
                 </button>
               )}
             </>
-          ) : (
+          ) : activeSidebarTab === "notes" ? (
             <div className="space-y-3 p-1">
               {/* Emergency response guideline quick-notes */}
               <div className="bg-rose-50/30 border border-rose-150 p-3 rounded-xl space-y-1.5 shadow-sm">
@@ -284,6 +307,43 @@ export default function LessonViewer({ course, onCompleteLessons, onBackToCatalo
                 <strong className="text-slate-800 font-bold block text-[10.5px]">Rescuer Protocol:</strong>
                 Always verify bystander safety, introduce credentials, request consent, and immediately assign someone to call responders before initiating physical care.
               </div>
+            </div>
+          ) : (
+            /* Reference Files Attachment Tab Screen */
+            <div className="space-y-3 p-1">
+              <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm text-[10px]">
+                <h4 className="font-bold text-slate-850 uppercase tracking-wider leading-none">Course Materials</h4>
+                <p className="text-slate-450 font-medium mt-1 leading-normal">Download attachments and files loaded by the training instructor.</p>
+              </div>
+
+              {!course.uploadedFiles || course.uploadedFiles.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 text-[10.5px] italic font-semibold border border-dashed border-slate-200 rounded-xl bg-white shadow-inner">
+                  No reference materials attached.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {course.uploadedFiles.map((file, idx) => (
+                    <a
+                      key={idx}
+                      href={file.data}
+                      download={file.name}
+                      className="flex items-center justify-between border border-slate-200 bg-white hover:border-rose-400 hover:bg-rose-50/10 p-2 rounded-xl transition shadow-sm text-left group shrink-0"
+                      title={`Download ${file.name}`}
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden flex-1 pr-1.5">
+                        <span className="text-xs shrink-0">📄</span>
+                        <div className="overflow-hidden">
+                          <span className="text-[10px] font-black text-slate-800 block truncate group-hover:text-rose-600 transition leading-tight">{file.name}</span>
+                          <span className="text-[8.5px] text-slate-400 font-semibold font-mono block leading-none mt-0.5">{file.size}</span>
+                        </div>
+                      </div>
+                      <span className="text-[8.5px] font-black text-rose-600 uppercase tracking-wider shrink-0 bg-rose-50 border border-rose-150 py-1 px-1.5 rounded-lg group-hover:bg-rose-600 group-hover:text-white group-hover:border-rose-600 transition">
+                        Get
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -386,18 +446,18 @@ export default function LessonViewer({ course, onCompleteLessons, onBackToCatalo
                             Lesson {currentSlide + 1}
                           </span>
                           <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none font-display">
-                            {lessons[currentSlide]?.title}
+                            {personalizeText(lessons[currentSlide]?.title)}
                           </h2>
                           {lessons[currentSlide]?.subtitle && (
                             <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                              {lessons[currentSlide].subtitle}
+                              {personalizeText(lessons[currentSlide].subtitle)}
                             </p>
                           )}
                         </div>
 
                         <div className="bg-slate-50 border border-slate-150 p-3 rounded-xl max-h-[140px] overflow-y-auto">
                           <p className="text-[11.5px] text-slate-600 leading-relaxed font-medium whitespace-pre-line">
-                            {lessons[currentSlide]?.content}
+                            {personalizeText(lessons[currentSlide]?.content)}
                           </p>
                         </div>
                       </div>
@@ -410,18 +470,18 @@ export default function LessonViewer({ course, onCompleteLessons, onBackToCatalo
                           Module Slide {currentSlide + 1}
                         </span>
                         <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none font-display">
-                          {lessons[currentSlide]?.title}
+                          {personalizeText(lessons[currentSlide]?.title)}
                         </h2>
                         {lessons[currentSlide]?.subtitle && (
                           <p className="text-xs sm:text-sm text-slate-500 font-semibold leading-relaxed">
-                            {lessons[currentSlide].subtitle}
+                            {personalizeText(lessons[currentSlide].subtitle)}
                           </p>
                         )}
                       </div>
 
                       <div className="bg-slate-50 border border-slate-150 p-4 rounded-xl text-left shadow-inner">
                         <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed font-medium whitespace-pre-line">
-                          {lessons[currentSlide]?.content}
+                          {personalizeText(lessons[currentSlide]?.content)}
                         </p>
                       </div>
                     </div>

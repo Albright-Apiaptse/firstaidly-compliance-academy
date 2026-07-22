@@ -788,7 +788,7 @@ readDB();
 
 // Login
 app.post("/api/auth/login", (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, targetPortal } = req.body;
   const db = readDB();
   
   const cleanEmail = email ? email.trim().toLowerCase() : "";
@@ -798,6 +798,13 @@ app.post("/api/auth/login", (req, res) => {
   
   if (!user) {
     return res.status(401).json({ error: "Invalid email or password." });
+  }
+
+  // Restrict portal access: if attempting to log into Admin/Instructor workspace
+  if (targetPortal === "admin" && user.role !== "admin" && user.role !== "instructor") {
+    return res.status(403).json({
+      error: "Access Restricted: Your account holds Student status. Instructor and Administrator access is limited strictly to authorized administrators."
+    });
   }
 
   res.json({
@@ -814,7 +821,7 @@ app.post("/api/auth/login", (req, res) => {
   });
 });
 
-// Signup
+// Signup - STRICT STUDENT-ONLY PUBLIC REGISTRATION
 app.post("/api/auth/signup", (req, res) => {
   const { email, name, password, role, profilePic } = req.body;
   const db = readDB();
@@ -823,12 +830,19 @@ app.post("/api/auth/signup", (req, res) => {
     return res.status(400).json({ error: "All fields are required." });
   }
 
+  // Security Check: Public registration is locked to student role only!
+  if (role && (role === "instructor" || role === "admin")) {
+    return res.status(403).json({
+      error: "Public account creation is strictly limited to Student accounts. Instructor and Administrator accounts are restricted and must be provisioned by a system administrator."
+    });
+  }
+
   const cleanEmail = email.trim();
   const cleanPassword = password.trim();
   const cleanName = name.trim();
 
   if (db.users.find((u: any) => u.email.trim().toLowerCase() === cleanEmail.toLowerCase())) {
-    return res.status(400).json({ error: "A user with this email already exists." });
+    return res.status(400).json({ error: "A user with this email address already exists." });
   }
 
   const newUser = {
@@ -836,30 +850,28 @@ app.post("/api/auth/signup", (req, res) => {
     email: cleanEmail,
     name: cleanName,
     password: cleanPassword,
-    role: role || "student",
+    role: "student" as const, // Hard-code student role for public registration
     profilePic: profilePic || `https://api.dicebear.com/7.x/adventurer/svg?seed=${name}`,
-    isVerified: role === "instructor" || role === "admin" ? true : false, // Students need OTP verification
+    isVerified: false, // Students need verification
     createdAt: new Date().toISOString()
   };
 
   db.users.push(newUser);
 
-  // If student, initialize progress record
-  if (newUser.role === "student") {
-    db.progress.push({
-      studentId: newUser.id,
-      studentName: newUser.name,
-      studentEmail: newUser.email,
-      completedQuizzes: {},
-      completedSimulations: {},
-      certificates: [],
-      profilePic: newUser.profilePic
-    });
-  }
+  // Initialize student progress record
+  db.progress.push({
+    studentId: newUser.id,
+    studentName: newUser.name,
+    studentEmail: newUser.email,
+    completedQuizzes: {},
+    completedSimulations: {},
+    certificates: [],
+    profilePic: newUser.profilePic
+  });
 
   db.systemLogs.push({
     timestamp: new Date().toISOString(),
-    message: `New user ${newUser.name} (${newUser.role}) registered successfully. Verification pending.`
+    message: `New student account created for ${newUser.name} (${newUser.email}). Verification pending.`
   });
 
   writeDB(db);
@@ -876,6 +888,38 @@ app.post("/api/auth/signup", (req, res) => {
     },
     token: `mock-token-${newUser.id}`
   });
+});
+
+// Admin User Role Management (Admin-only capability to promote/demote users)
+app.post("/api/admin/users/update-role", (req, res) => {
+  const { adminUserId, targetUserId, newRole } = req.body;
+  const db = readDB();
+
+  const admin = db.users.find((u: any) => u.id === adminUserId);
+  if (!admin || admin.role !== "admin") {
+    return res.status(403).json({ error: "Unauthorized: Only system administrators can modify user roles." });
+  }
+
+  const targetUser = db.users.find((u: any) => u.id === targetUserId);
+  if (!targetUser) {
+    return res.status(404).json({ error: "Target user account not found." });
+  }
+
+  if (!["student", "instructor", "admin"].includes(newRole)) {
+    return res.status(400).json({ error: "Invalid role specified." });
+  }
+
+  const oldRole = targetUser.role;
+  targetUser.role = newRole;
+
+  db.systemLogs.push({
+    timestamp: new Date().toISOString(),
+    message: `User ${targetUser.name} (${targetUser.email}) role updated from ${oldRole} to ${newRole} by Administrator ${admin.name}.`
+  });
+
+  writeDB(db);
+
+  res.json({ success: true, user: targetUser });
 });
 
 // Verify OTP
@@ -980,6 +1024,40 @@ app.post("/api/students/update-profile-pic", (req, res) => {
   if (prog) {
     prog.profilePic = profilePic;
   }
+
+  writeDB(db);
+  res.json({ success: true, user });
+});
+
+// Update User Personal Profile Information
+app.post("/api/user/update-profile", (req, res) => {
+  const { userId, name, email, password, profilePic } = req.body;
+  const db = readDB();
+
+  const user = db.users.find((u: any) => u.id === userId);
+  if (!user) {
+    return res.status(404).json({ error: "User not found." });
+  }
+
+  if (name && name.trim()) user.name = name.trim();
+  if (email && email.trim()) user.email = email.trim();
+  if (password && password.trim()) user.password = password.trim();
+  if (profilePic) user.profilePic = profilePic;
+
+  // Sync with student progress record if they are a student
+  if (user.role === "student") {
+    const prog = db.progress.find((p: any) => p.studentId === userId);
+    if (prog) {
+      if (name && name.trim()) prog.studentName = name.trim();
+      if (email && email.trim()) prog.studentEmail = email.trim();
+      if (profilePic) prog.profilePic = profilePic;
+    }
+  }
+
+  db.systemLogs.push({
+    timestamp: new Date().toISOString(),
+    message: `User ${user.name} (${user.role}) updated their personal profile information.`
+  });
 
   writeDB(db);
   res.json({ success: true, user });
@@ -1135,7 +1213,7 @@ app.get("/api/courses", (req, res) => {
 
 // Create/Update Course Materials (Admin Only)
 app.post("/api/courses", (req, res) => {
-  const { id, title, description, category, lessons, videoUrl, quizQuestions, simulationScenario } = req.body;
+  const { id, title, description, category, lessons, videoUrl, quizQuestions, simulationScenario, uploadedFiles } = req.body;
   const db = readDB();
 
   if (!title || !description || !category) {
@@ -1155,7 +1233,8 @@ app.post("/api/courses", (req, res) => {
       lessons: lessons || [],
       videoUrl: videoUrl || "",
       quizQuestions: quizQuestions || [],
-      simulationScenario: simulationScenario || { title: "Emergency Simulation", description: "", initialState: "", criticalSteps: [] }
+      simulationScenario: simulationScenario || { title: "Emergency Simulation", description: "", initialState: "", criticalSteps: [] },
+      uploadedFiles: uploadedFiles || []
     };
     db.systemLogs.push({
       timestamp: new Date().toISOString(),
@@ -1171,7 +1250,8 @@ app.post("/api/courses", (req, res) => {
       lessons: lessons || [],
       videoUrl: videoUrl || "",
       quizQuestions: quizQuestions || [],
-      simulationScenario: simulationScenario || { title: "Emergency Simulation", description: "", initialState: "", criticalSteps: [] }
+      simulationScenario: simulationScenario || { title: "Emergency Simulation", description: "", initialState: "", criticalSteps: [] },
+      uploadedFiles: uploadedFiles || []
     };
     db.courses.push(newCourse);
     db.systemLogs.push({

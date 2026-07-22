@@ -1,6 +1,6 @@
 {
-  "name": "First Aidly.compliance.training",
-  "description": "Professional first-aid training, interactive clinical emergency index simulators, regional AED mapping, and OSHA-compliant corporate audits.",
+  "name": "First Aidly",
+  "description": "First Aid.ly is a professional first-aid training platform, designed to empower passionate individuals with basic first aid skills and get them certified.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
